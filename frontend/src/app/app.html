@@ -1,0 +1,389 @@
+@if (authPage(); as auth) {
+  <main class="auth-screen">
+    <section class="auth-card">
+      <a class="brand auth-brand" routerLink="/login">
+        <span class="brand-mark">H</span><span>HR<span class="brand-light">Genius</span></span>
+      </a>
+      <span class="eyebrow">PEOPLE OPERATIONS, SIMPLIFIED</span>
+      <h1>{{ authTitle() }}</h1>
+      <p class="muted auth-intro">
+        @if (auth === 'forgot') {
+          Having trouble signing in? Contact your HR administrator for help with your password.
+        } @else if (auth === 'signup') {
+          Join your HRGenius team and manage your work in one place.
+        } @else {
+          Welcome back. Sign in to continue to your HRGenius workspace.
+        }
+      </p>
+      <form class="auth-form" #authNgForm="ngForm" (ngSubmit)="submitAuth(authNgForm)">
+        @if (auth === 'signup') {
+          <label>Full name<input name="authName" [(ngModel)]="authForm.name" #authName="ngModel" placeholder="Your name" required maxlength="100" autocomplete="name" [disabled]="authBusy()" /></label>
+          @if (isAuthInvalid(authName)) { <span class="field-error">Enter your name (up to 100 characters).</span> }
+        }
+        <label>Email address<input name="authEmail" type="email" [(ngModel)]="authForm.email" #authEmail="ngModel" placeholder="you@company.com" required maxlength="254" autocomplete="email" [disabled]="authBusy()" /></label>
+        @if (isAuthInvalid(authEmail)) { <span class="field-error">Enter a valid email address.</span> }
+        @if (auth !== 'forgot') {
+          <label>Password<input name="authPassword" type="password" [(ngModel)]="authForm.password" #authPassword="ngModel" [placeholder]="auth === 'signup' ? 'At least 12 characters' : 'Enter your password'" required [minlength]="auth === 'signup' ? 12 : 1" maxlength="64" [autocomplete]="auth === 'signup' ? 'new-password' : 'current-password'" [disabled]="authBusy()" /></label>
+          @if (isAuthInvalid(authPassword)) { <span class="field-error">{{ auth === 'signup' ? 'Use at least 12 characters (maximum 64).' : 'Enter your password.' }}</span> }
+        }
+        @if (auth === 'forgot') {
+          <div class="forgot-disabled"><strong>Password reset is not available yet</strong><span>Please contact your HR administrator for help getting back into your account.</span></div>
+          <button class="button button-primary full-width" type="button" (click)="showPasswordResetSetupNotice()">Show account help</button>
+        } @else {
+          <button class="button button-primary full-width" type="submit" [disabled]="authNgForm.invalid || authBusy()">
+            @if (authBusy()) { <span class="spinner auth-spinner"></span> }
+            {{ authBusy() ? 'Please wait…' : auth === 'signup' ? 'Create account' : 'Sign in' }}
+          </button>
+        }
+      </form>
+      @if (authError()) { <p class="auth-error" role="alert">{{ authError() }}</p> }
+      @if (authNotice()) { <p class="auth-notice" role="status">{{ authNotice() }}</p> }
+      @if (auth !== 'forgot') { <p class="demo-callout"><span class="status-dot"></span> New accounts start with employee access. Contact your HR administrator if you need additional access.</p> }
+      @if (auth === 'login') {
+        <div class="auth-links"><button type="button" (click)="showAuth('forgot')">Forgot password?</button><span>New to HRGenius? <button type="button" (click)="showAuth('signup')">Create account</button></span></div>
+      } @else if (auth === 'signup') {
+        <div class="auth-links auth-back"><span>Already have an account? <button type="button" (click)="showAuth('login')">Sign in</button></span></div>
+      } @else {
+        <div class="auth-links auth-back"><button type="button" (click)="showAuth('login')">← Back to sign in</button></div>
+      }
+    </section>
+  </main>
+} @else {
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#" (click)="$event.preventDefault(); navigate('dashboard')">
+        <span class="brand-mark">H</span><span>HR<span class="brand-light">Genius</span></span>
+      </a>
+      <div class="sidebar-scroll">
+        <div class="nav-group">
+          <span class="nav-label">OVERVIEW</span>
+          <button class="nav-item" [class.active]="activePage() === 'dashboard'" (click)="navigate('dashboard')"><span class="nav-icon">▦</span>Dashboard</button>
+          <button class="nav-item" [class.active]="activePage() === 'recruitment'" (click)="navigate('recruitment')"><span class="nav-icon">♙</span>Recruitment</button>
+          @if (isAdmin()) {
+            <button class="nav-item" [class.active]="activePage() === 'performance'" (click)="navigate('performance')"><span class="nav-icon">⌁</span>Performance</button>
+            <button class="nav-item" [class.active]="activePage() === 'training'" (click)="navigate('training')"><span class="nav-icon">▤</span>Training & Development</button>
+            <button class="nav-item" [class.active]="activePage() === 'tasks'" (click)="navigate('tasks')"><span class="nav-icon">☑</span>Task Management</button>
+          } @else {
+            <button class="nav-item" [class.active]="activePage() === 'training'" (click)="navigate('training')"><span class="nav-icon">▤</span>My Training</button>
+            <button class="nav-item" [class.active]="activePage() === 'tasks'" (click)="navigate('tasks')"><span class="nav-icon">☑</span>My Tasks</button>
+          }
+        </div>
+        <div class="nav-group">
+          <span class="nav-label">PEOPLE</span>
+          @if (isAdmin()) { <button class="nav-item" [class.active]="activePage() === 'employees'" (click)="navigate('employees')"><span class="nav-icon">♧</span>Employees</button> }
+          <button class="nav-item" [class.active]="activePage() === 'onboarding'" (click)="navigate('onboarding')"><span class="nav-icon">✦</span>{{ isAdmin() ? 'Onboarding' : 'My Onboarding' }}</button>
+          <button class="nav-item" [class.active]="activePage() === 'attendance'" (click)="navigate('attendance')"><span class="nav-icon">◷</span>Attendance</button>
+          <button class="nav-item" [class.active]="activePage() === 'leave'" (click)="navigate('leave')"><span class="nav-icon">▣</span>Leave Management</button>
+          <button class="nav-item" [class.active]="activePage() === 'payroll'" (click)="navigate('payroll')"><span class="nav-icon">＄</span>Payroll</button>
+        </div>
+        <div class="nav-group">
+          <span class="nav-label">RESOURCES</span>
+          <button class="nav-item" [class.active]="activePage() === 'documents'" (click)="navigate('documents')"><span class="nav-icon">▧</span>Documents</button>
+          <button class="nav-item" [class.active]="activePage() === 'announcements'" (click)="navigate('announcements')"><span class="nav-icon">◉</span>Announcements</button>
+          <button class="nav-item" [class.active]="activePage() === 'analytics'" (click)="navigate('analytics')"><span class="nav-icon">▥</span>Reports & Analytics</button>
+        </div>
+        <div class="nav-group">
+          <span class="nav-label">SYSTEM</span>
+          <button class="nav-item" [class.active]="activePage() === 'settings'" (click)="navigate('settings')"><span class="nav-icon">⚙</span>Account settings</button>
+        </div>
+
+        <!-- Notification Bell -->
+        <div class="sidebar-notif-wrap">
+          <button class="sidebar-notif-btn" id="sidebar-notif-bell" aria-label="Notifications" (click)="notifService.togglePanel()">
+            <span class="sidebar-notif-icon">&#128276;</span>
+            <span class="sidebar-notif-label">Notifications</span>
+            @if (notifService.unreadCount() > 0) {
+              <span class="sidebar-notif-badge">{{ notifService.unreadCount() > 9 ? "9+" : notifService.unreadCount() }}</span>
+            }
+          </button>
+        </div>
+      </div>
+      <div class="sidebar-user">
+        <div class="avatar user-avatar">{{ currentUser()?.name?.slice(0, 2)?.toUpperCase() }}</div>
+        <div class="user-copy"><strong>{{ currentUser()?.name }}</strong><span>{{ currentUser()?.email }}</span></div>
+        <button class="user-more" aria-label="Sign out" title="Sign out" (click)="logout()">↪</button>
+      </div>
+      <button class="logout-button" (click)="logout()">Sign out <span>↗</span></button>
+
+      <!-- Notification Slide Panel inside sidebar -->
+      @if (notifService.showPanel()) {
+        <div class="notif-panel" role="dialog" aria-label="Notifications">
+          <div class="notif-panel-head">
+            <div class="notif-head-title">
+              <strong>Notifications</strong>
+              @if (notifService.unreadCount() > 0) { <span class="notif-unread-chip">{{ notifService.unreadCount() }} new</span> }
+            </div>
+            <div class="notif-head-actions">
+              @if (notifService.unreadCount() > 0) {
+                <button class="notif-mark-all" (click)="notifService.markAllRead()">Mark all read</button>
+              }
+              <button class="notif-close-btn" aria-label="Close notifications" (click)="notifService.closePanel()">&#215;</button>
+            </div>
+          </div>
+          <div class="notif-list">
+            @if (notifService.notifications().length === 0) {
+              <div class="notif-empty">
+                <span>&#128277;</span>
+                <strong>No notifications yet</strong>
+                <small>Updates about attendance and leaves will appear here.</small>
+              </div>
+            } @else {
+              @for (notif of notifService.notifications(); track notif.id) {
+                <div class="notif-item" [class.notif-unread]="!notif.read" (click)="notifService.markRead(notif.id)">
+                  <span class="notif-item-icon" [class]="'notif-icon-' + notif.type">{{ notif.icon }}</span>
+                  <div class="notif-item-body">
+                    <div class="notif-item-title">{{ notif.title }}</div>
+                    <div class="notif-item-msg">{{ notif.message }}</div>
+                    <div class="notif-item-time">{{ notif.time | date:"mediumDate" }}</div>
+                  </div>
+                  @if (!notif.read) { <span class="notif-dot"></span> }
+                </div>
+              }
+            }
+          </div>
+        </div>
+      }
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="breadcrumb"><span>Workspace</span><span class="crumb-separator">/</span><strong>{{ pageTitles[activePage()] }}</strong></div>
+        @if (isAdmin() && (activePage() === 'dashboard' || activePage() === 'employees')) { <label class="global-search"><span>⌕</span><input aria-label="Search employees" placeholder="Search employees..." [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" /><kbd>⌘ K</kbd></label> }
+        <div class="top-actions">
+          <button class="icon-button" aria-label="Announcements" title="Announcements" (click)="navigate('announcements')">✉</button>
+          <button class="icon-button notification-button" aria-label="Tasks" title="Tasks" (click)="navigate('tasks')">♧<i></i></button>
+          @if (activePage() !== 'settings') { <button class="button button-primary export-button" (click)="exportCurrentData()"><span>⇩</span> Export Data</button> }
+        </div>
+      </header>
+      @if (pageError() && activePage() !== 'dashboard' && activePage() !== 'employees') { <div class="alert alert-error workspace-global-error" role="alert"><span>!</span><div><strong>Something went wrong</strong><p>{{ pageError() }}</p></div><button class="text-button" (click)="exportCurrentData()">Try again</button></div> }
+
+      @if (activePage() === 'dashboard') {
+        @if (isAdmin()) {
+        <section class="page-content dashboard-content">
+          <div class="page-heading">
+            <div><div class="eyebrow">HR OPERATIONS</div><h1>Good morning, {{ currentUser()?.name?.split(' ')?.[0] || 'there' }} <span class="wave">✦</span></h1><p>People, payroll and attendance across your organization.</p></div>
+            <div class="source-legend"><span class="legend-live" [class.legend-offline]="dashboardError() || pageError()"></span> HR overview: <strong>{{ dashboardLoading() ? 'Loading' : dashboardError() || pageError() ? 'Temporarily unavailable' : 'Up to date' }}</strong></div>
+          </div>
+          @if (pageError()) { <div class="alert alert-error"><span>!</span><div><strong>Employee data unavailable</strong><p>{{ pageError() }}</p></div><button class="text-button" (click)="loadEmployees()">Retry</button></div> }
+          @if (dashboardError()) { <div class="alert alert-error"><span>!</span><div><strong>Dashboard data unavailable</strong><p>{{ dashboardError() }}</p></div><button class="text-button" (click)="loadDashboardData()">Retry</button></div> }
+          <div class="stats-grid">
+            <article class="stat-card">
+              <div class="stat-top"><span>Employees</span><span class="quiet-menu" aria-hidden="true">⋮</span></div>
+              <div class="stat-value">{{ loading() || pageError() ? '—' : employees().length }}<span class="trend positive">LIVE</span></div>
+              <div class="stat-meter employee-meter" aria-label="Employee status breakdown">
+                <i [style.width.%]="attendanceSegmentWidth(dashboardEmployeeStatusCounts().active)"></i>
+                <i [style.width.%]="attendanceSegmentWidth(dashboardEmployeeStatusCounts().inactive)"></i>
+                <i [style.width.%]="attendanceSegmentWidth(dashboardEmployeeStatusCounts().onLeave)"></i>
+              </div>
+              <div class="stat-caption"><span><i class="cyan-dot"></i> Active ({{ dashboardEmployeeStatusCounts().active }})</span><span><i class="blue-dot"></i> Inactive ({{ dashboardEmployeeStatusCounts().inactive }})</span><span><i class="orange-dot"></i> On leave ({{ dashboardEmployeeStatusCounts().onLeave }})</span></div>
+            </article>
+            <article class="stat-card">
+              <div class="stat-top"><span>Payroll · {{ dashboardSummary()?.payrollPeriod || '—' }}</span><span class="quiet-menu" aria-hidden="true">⋮</span></div>
+              <div class="stat-value">{{ dashboardSummary()?.currentPayrollTotal == null ? '—' : (dashboardSummary()?.currentPayrollTotal | currency) }} <span class="trend positive">LIVE</span></div>
+              <div class="stat-meter payroll-meter" aria-label="Payroll payment status breakdown">
+                <i [style.width.%]="payrollSegmentWidth(payrollStatusAmount('PAID'))"></i>
+                <i [style.width.%]="payrollSegmentWidth(payrollStatusAmount('PENDING'))"></i>
+              </div>
+              <div class="stat-caption"><span><i class="blue-dot"></i> Paid ({{ payrollStatusAmount('PAID') | currency:'USD':'symbol':'1.0-0' }})</span><span><i class="orange-dot"></i> Pending ({{ payrollStatusAmount('PENDING') | currency:'USD':'symbol':'1.0-0' }})</span></div>
+            </article>
+            <article class="stat-card attendance-stat">
+              <div class="stat-top"><span>Attendance today</span><span class="quiet-menu" aria-hidden="true">⋮</span></div>
+              <div class="attendance-wrap">
+                <div class="gauge">
+                  <svg viewBox="0 0 160 96" role="img" aria-label="Attendance totals for today">
+                    <path class="gauge-track" d="M18 78 A62 62 0 0 1 142 78" />
+                    <path class="gauge-blue" d="M18 78 A62 62 0 0 1 142 78" [attr.stroke-dasharray]="attendanceArc(dashboardSummary()?.attendancePresentToday ?? 0)" />
+                    <path class="gauge-cyan" d="M18 78 A62 62 0 0 1 142 78" [attr.stroke-dasharray]="attendanceArc(dashboardSummary()?.attendanceLateToday ?? 0)" [attr.stroke-dashoffset]="attendanceOffset(dashboardSummary()?.attendancePresentToday ?? 0)" />
+                    <path class="gauge-orange" d="M18 78 A62 62 0 0 1 142 78" [attr.stroke-dasharray]="attendanceArc(dashboardSummary()?.attendanceAbsentToday ?? 0)" [attr.stroke-dashoffset]="attendanceOffset((dashboardSummary()?.attendancePresentToday ?? 0) + (dashboardSummary()?.attendanceLateToday ?? 0))" />
+                  </svg>
+                  <span class="gauge-total"><small>Today</small><strong>{{ dashboardSummary()?.attendanceTotalToday ?? '—' }}</strong></span>
+                </div>
+                <div class="attendance-legend"><span><i class="blue-dot"></i> Present <b>({{ dashboardSummary()?.attendancePresentToday ?? '—' }})</b></span><span><i class="cyan-dot"></i> Late <b>({{ dashboardSummary()?.attendanceLateToday ?? '—' }})</b></span><span><i class="orange-dot"></i> Absent <b>({{ dashboardSummary()?.attendanceAbsentToday ?? '—' }})</b></span></div>
+              </div>
+            </article>
+          </div>
+
+          <div class="dashboard-columns">
+            <div class="primary-column">
+              <article class="panel finance-panel">
+                <div class="panel-heading finance-heading"><h2>Payroll & Finance</h2><button class="quiet-menu" aria-label="View payroll" title="View payroll" (click)="navigate('payroll')">⋮</button></div>
+                @if (dashboardSummary()?.payrollHistory?.length) {
+                  <div class="finance-chart-wrap">
+                    <svg class="finance-chart" viewBox="0 0 640 220" preserveAspectRatio="none" role="img" aria-label="Payroll and finance totals by month">
+                      <defs>
+                        <linearGradient id="payrollChartFill" x1="0" x2="0" y1="0" y2="1">
+                          <stop offset="0%" stop-color="#4775d1" stop-opacity=".3" />
+                          <stop offset="100%" stop-color="#4775d1" stop-opacity=".015" />
+                        </linearGradient>
+                      </defs>
+                      @for (tick of payrollChartTicks(); track tick) {
+                        <line class="chart-grid" x1="64" x2="630" [attr.y1]="payrollChartY(tick)" [attr.y2]="payrollChartY(tick)" />
+                        <text class="chart-axis-label" x="58" [attr.y]="payrollChartY(tick) + 4" text-anchor="end">{{ payrollAxisLabel(tick) }}</text>
+                      }
+                      <path class="chart-area" fill="url(#payrollChartFill)" [attr.d]="payrollAreaPath()" />
+                      <path class="chart-line" [attr.d]="payrollCurvePath()" />
+                      @for (point of payrollChartPoints(); track point.period) {
+                        <text class="chart-month-label" [attr.x]="point.x" y="207" text-anchor="middle">{{ payrollMonthLabel(point.period) }}</text>
+                      }
+                    </svg>
+                  </div>
+                } @else if (dashboardLoading()) {
+                  <div class="table-message"><span class="spinner"></span>Loading payroll history…</div>
+                } @else {
+                  <div class="table-message empty-message"><strong>No payroll history</strong><span>Monthly data will appear when payroll records exist.</span></div>
+                }
+              </article>
+
+              <article class="panel employees-panel">
+                <div class="panel-heading"><div><h2>Employees List</h2><span class="panel-subtitle">{{ employees().length }} employee records</span></div><button class="text-button" (click)="navigate('employees')">See all <span>→</span></button></div>
+                @if (loading()) {
+                  <div class="table-message"><span class="spinner"></span>Loading employees…</div>
+                } @else if (filteredEmployees().length === 0) {
+                    <div class="table-message empty-message"><span class="empty-icon">♧</span><strong>{{ searchTerm() ? 'No matching employees' : 'No employee records yet' }}</strong><span>{{ searchTerm() ? 'Try another search term.' : 'Add your first employee to get started.' }}</span>@if (!searchTerm() && isAdmin()) { <button class="button button-primary button-small" (click)="openCreateDialog()">Add employee</button> }</div>
+                } @else {
+                  <div class="table-scroll"><table class="employee-table">
+                    <thead><tr><th>Employee</th><th>Role</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody>
+                      @for (employee of filteredEmployees().slice(0, 5); track employee.id) {
+                        <tr>
+                          <td><div class="employee-cell"><span class="avatar employee-avatar">{{ employee.firstName.charAt(0) }}{{ employee.lastName.charAt(0) }}</span><span><strong>{{ employee.firstName }} {{ employee.lastName }}</strong><small>#{{ employee.id }} · {{ employee.email }}</small></span></div></td>
+                          <td><strong>{{ employee.designation || 'Team member' }}</strong><small class="table-secondary">{{ employee.department || 'Department not set' }}</small></td>
+                          <td><span class="status-active"><i></i> Employee</span><small class="table-secondary">Current record</small></td>
+                          <td><button class="button button-outline profile-button" (click)="viewEmployee(employee)">View profile <span>↗</span></button></td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table></div>
+                }
+              </article>
+            </div>
+
+            <div class="secondary-column">
+              <article class="panel tasks-panel">
+                <div class="panel-heading"><div><h2>Things To Do</h2><span class="panel-subtitle">{{ dashboardSummary()?.openTaskCount ?? '—' }} open tasks</span></div><button class="text-button" (click)="navigate('tasks')">Manage →</button></div>
+                @if (dashboardLoading()) {
+                  <div class="table-message"><span class="spinner"></span>Loading tasks…</div>
+                } @else if (dashboardTasks().length === 0) {
+                  <div class="dashboard-empty"><strong>No open tasks</strong><span>Assigned tasks will appear here.</span><button class="button button-outline button-small" (click)="navigate('tasks')">Open task management</button></div>
+                } @else {
+                  @for (task of dashboardTasks(); track task.id) {
+                    <div class="task-card"><div class="task-title">{{ task.title }}</div><p>{{ task.description || 'No additional details.' }}</p><div class="task-footer"><span class="task-owner">{{ task.employeeName || 'Workspace task' }}</span><button class="done-button" [disabled]="task.status === 'COMPLETED'" (click)="completeDashboardTask(task)">DONE</button></div></div>
+                  }
+                }
+              </article>
+
+              <!-- Recent Activity Panel (admin) -->
+              <article class="panel activity-panel">
+                <div class="panel-heading"><div><h2>Recent Activity</h2><span class="panel-subtitle">Attendance &amp; leave updates</span></div>
+                  @if (notifService.unreadCount() > 0) { <span class="activity-unread-count">{{ notifService.unreadCount() }} new</span> }
+                </div>
+                @if (notifService.notifications().length === 0) {
+                  <div class="dashboard-empty"><strong>No recent activity</strong><span>Attendance and leave changes will appear here.</span></div>
+                } @else {
+                  <div class="activity-list">
+                    @for (notif of notifService.notifications().slice(0, 5); track notif.id) {
+                      <div class="activity-item" [class.activity-unread]="!notif.read" (click)="notifService.markRead(notif.id)">
+                        <span class="activity-icon" [class]="'notif-icon-' + notif.type">{{ notif.icon }}</span>
+                        <div class="activity-body">
+                          <div class="activity-title">{{ notif.title }}</div>
+                          <div class="activity-msg">{{ notif.message }}</div>
+                        </div>
+                        @if (!notif.read) { <span class="activity-dot"></span> }
+                      </div>
+                    }
+                  </div>
+                  @if (notifService.notifications().length > 5) {
+                    <button class="activity-view-all" (click)="notifService.togglePanel()">View all {{ notifService.notifications().length }} updates →</button>
+                  }
+                }
+              </article>
+
+              <article class="panel announcements-panel">
+                <div class="panel-heading"><div><h2>Recent Announcements</h2><span class="panel-subtitle">{{ dashboardSummary()?.publishedAnnouncementCount ?? '—' }} published</span></div><button class="add-announcement" (click)="navigate('announcements')">{{ isAdmin() ? '+ Manage' : 'View all' }}</button></div>
+                @if (dashboardAnnouncements().length === 0) {
+                  <div class="dashboard-empty"><strong>No announcements yet</strong><span>Published organization updates will appear here.</span></div>
+                } @else {
+                  @for (announcement of dashboardAnnouncements(); track announcement.id) {
+                    <div class="announcement-card"><div class="announcement-title">{{ announcement.title }}</div><p>{{ announcement.description || 'No additional details.' }}</p><span class="announcement-time">▢ {{ announcement.updatedAt | date:'mediumDate' }}</span></div>
+                  }
+                }
+              </article>
+            </div>
+          </div>
+        </section>
+        } @else {
+          @defer (on immediate) {
+            <app-employee-home />
+          } @placeholder {
+            <section class="page-content"><div class="table-message"><span class="spinner"></span>Opening your dashboard…</div></section>
+          }
+        }
+      } @else if (activePage() === 'employees') {
+        <section class="page-content module-content">
+          <div class="page-heading module-heading"><div><div class="eyebrow">PEOPLE DIRECTORY</div><h1>Employees</h1><p>Meet your team and keep employee details up to date.</p></div>@if (isAdmin()) { <button class="button button-primary" (click)="openCreateDialog()"><span>＋</span> Add employee</button> }</div>
+          @if (pageError()) { <div class="alert alert-error"><span>!</span><div><strong>We couldn’t load the employee directory</strong><p>{{ pageError() }}</p></div><button class="text-button" (click)="loadEmployees()">Try again</button></div> }
+          @if (employeeSuccess()) { <div class="employee-success" role="status">✓ {{ employeeSuccess() }}</div> }
+          <article class="panel directory-panel">
+            <div class="directory-toolbar"><div><h2>All employees <span class="count-pill">{{ employees().length }}</span></h2><span class="panel-subtitle">Search, review and update employee records</span></div><label class="directory-search"><span>⌕</span><input placeholder="Search by name, email, role..." [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" /></label></div>
+            @if (loading()) {
+              <div class="table-message"><span class="spinner"></span>Loading employees…</div>
+            } @else if (filteredEmployees().length === 0) {
+            <div class="table-message empty-message"><span class="empty-icon">♧</span><strong>{{ searchTerm() ? 'No matching employees' : 'No employee records yet' }}</strong><span>{{ searchTerm() ? 'Try another search term.' : 'Add your first employee to populate the directory.' }}</span>@if (!searchTerm() && isAdmin()) { <button class="button button-primary button-small" (click)="openCreateDialog()">Add employee</button> }</div>
+            } @else {
+              <div class="table-scroll"><table class="directory-table">
+                <thead><tr><th>EMPLOYEE</th><th>DEPARTMENT</th><th>DESIGNATION</th><th>EMAIL</th><th>SALARY</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+                <tbody>
+                  @for (employee of filteredEmployees(); track employee.id) {
+                    <tr><td><div class="employee-cell"><span class="avatar employee-avatar">{{ employee.firstName.charAt(0) }}{{ employee.lastName.charAt(0) }}</span><span><strong>{{ employee.firstName }} {{ employee.lastName }}</strong><small>Employee #{{ employee.id }}</small></span></div></td><td>{{ employee.department || '—' }}</td><td>{{ employee.designation || '—' }}</td><td class="email-cell">{{ employee.email }}</td><td>{{ employee.salary == null ? '—' : (employee.salary | currency:'USD':'symbol':'1.0-0') }}</td><td><span class="status-pill" [class]="'status-pill status-' + employee.status.toLowerCase()">{{ employee.status }}</span></td><td><div class="row-actions"><button class="action-button" title="View employee" aria-label="View employee" (click)="viewEmployee(employee)">◉</button>@if (isAdmin()) { <button class="action-button" title="Edit employee" aria-label="Edit employee" (click)="openEditDialog(employee)">✎</button><button class="action-button delete-action" title="Delete employee" aria-label="Delete employee" (click)="deleteEmployee(employee)">⌫</button> }</div></td></tr>
+                  }
+                </tbody>
+              </table></div>
+              <div class="table-footer">Showing {{ filteredEmployees().length }} of {{ employees().length }} employees</div>
+            }
+          </article>
+        </section>
+      } @else if (activePage() === 'attendance' || activePage() === 'leave' || activePage() === 'payroll' || activePage() === 'recruitment') {
+        @defer (on immediate) {
+          <app-hr-modules [page]="activeHrPage()" />
+        } @placeholder {
+          <section class="page-content"><div class="table-message"><span class="spinner"></span>Opening HR module…</div></section>
+        }
+      } @else if (activePage() === 'settings') {
+        @defer (on immediate) {
+          <app-account-settings />
+        } @placeholder {
+          <section class="page-content"><div class="table-message"><span class="spinner"></span>Opening account settings…</div></section>
+        }
+      } @else {
+        @defer (on immediate) {
+          <app-workspace [page]="activeWorkspacePage()" />
+        } @placeholder {
+          <section class="page-content"><div class="table-message"><span class="spinner"></span>Opening workspace…</div></section>
+        }
+      }
+    </main>
+  </div>
+
+  @if (selectedEmployee(); as employee) {
+    <div class="dialog-backdrop" (click)="closeEmployeeDetails()">
+      <section class="employee-dialog details-dialog" role="dialog" aria-modal="true" aria-labelledby="employee-details-title" (click)="$event.stopPropagation()">
+        <div class="dialog-heading"><div><span class="eyebrow">EMPLOYEE DETAILS · #{{ employee.id }}</span><h2 id="employee-details-title">{{ employee.firstName }} {{ employee.lastName }}</h2><p>{{ employee.designation || 'Team member' }} · {{ employee.department || 'Department not set' }}</p></div><button class="close-dialog" aria-label="Close employee details" (click)="closeEmployeeDetails()">×</button></div>
+        <div class="details-grid"><span>Email address</span><strong>{{ employee.email }}</strong><span>Department</span><strong>{{ employee.department || '—' }}</strong><span>Designation</span><strong>{{ employee.designation || '—' }}</strong><span>Employment status</span><strong>{{ employee.status }}</strong><span>Annual salary</span><strong>{{ employee.salary == null ? '—' : (employee.salary | currency:'USD':'symbol':'1.0-0') }}</strong></div>
+        <div class="dialog-actions"><button class="button button-outline" (click)="closeEmployeeDetails()">Close</button>@if (isAdmin()) { <button class="button button-primary" (click)="openEditDialog(employee)">Edit employee</button> }</div>
+      </section>
+    </div>
+  }
+
+  @if (showEmployeeDialog()) {
+    <div class="dialog-backdrop" (click)="closeEmployeeDialog()">
+      <section class="employee-dialog" role="dialog" aria-modal="true" aria-labelledby="employee-dialog-title" (click)="$event.stopPropagation()">
+        <div class="dialog-heading"><div><span class="eyebrow">EMPLOYEE DETAILS</span><h2 id="employee-dialog-title">{{ editingEmployee() ? 'Edit employee' : 'Add employee' }}</h2><p>Update the details below and save your changes.</p></div><button class="close-dialog" aria-label="Close dialog" (click)="closeEmployeeDialog()">×</button></div>
+        @if (formError()) { <div class="alert alert-error compact-alert"><span>!</span><p>{{ formError() }}</p></div> }
+        <form class="employee-form" #employeeForm="ngForm" (ngSubmit)="saveEmployee()">
+          <div class="form-grid"><label>First name <input name="firstName" [(ngModel)]="form.firstName" required maxlength="80" /></label><label>Last name <input name="lastName" [(ngModel)]="form.lastName" required maxlength="80" /></label><label class="form-span">Email address <input name="email" type="email" [(ngModel)]="form.email" required maxlength="120" /></label><label>Department <input name="department" list="employee-departments" [(ngModel)]="form.department" maxlength="100" placeholder="Choose or type a department" /><datalist id="employee-departments">@for (department of departmentOptions(); track department) { <option [value]="department"></option> }</datalist></label><label>Designation <input name="designation" [(ngModel)]="form.designation" maxlength="100" /></label><label>Employment status <select name="employeeStatus" [(ngModel)]="form.status" required><option value="ACTIVE">Active</option><option value="INACTIVE">Inactive</option></select></label><label class="form-span">Annual salary <div class="currency-input"><span>$</span><input name="salary" type="number" min="0" step="0.01" [(ngModel)]="form.salary" /></div></label></div>
+          <div class="dialog-actions"><button type="button" class="button button-outline" [disabled]="saving()" (click)="closeEmployeeDialog()">Cancel</button><button class="button button-primary" type="submit" [disabled]="employeeForm.invalid || saving()"><span>{{ saving() ? 'Saving…' : editingEmployee() ? 'Save changes' : 'Add employee' }}</span></button></div>
+        </form>
+      </section>
+    </div>
+  }
+}

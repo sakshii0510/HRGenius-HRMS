@@ -1,0 +1,237 @@
+<section class="page-content module-content hr-module" [class.recruitment-module]="page === 'recruitment'">
+  @if (page === 'attendance') {
+    <div class="page-heading module-heading">
+      <div>
+        <div class="eyebrow">PEOPLE OPERATIONS</div>
+        <h1>Attendance</h1>
+        <p>Keep track of daily attendance and your team’s working hours.</p>
+      </div>
+      @if (employees().length > 0) {
+        <button class="button button-primary" type="button" (click)="startAttendanceCreate()">＋ Record attendance</button>
+      }
+    </div>
+    <div class="module-toolbar">
+      <label class="directory-search"><span>⌕</span><input aria-label="Search attendance" placeholder="Search employee or status" [ngModel]="search()" (ngModelChange)="search.set($event)" /></label>
+      @if (isAdmin()) {
+        <select aria-label="Filter by employee" [ngModel]="employeeFilter()" (ngModelChange)="employeeFilter.set($event); load()">
+          <option value="">All employees</option>
+          @for (employee of employees(); track employee.id) { <option [value]="employee.id">{{ employee.firstName }} {{ employee.lastName }}</option> }
+        </select>
+      }
+      <select aria-label="Filter by attendance status" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event); load()">
+        <option value="">All statuses</option>
+        @for (status of attendanceStatuses; track status) { <option [value]="status">{{ status.replace('_', ' ') }}</option> }
+      </select>
+      <label class="date-filter">From <input type="date" [ngModel]="fromDate()" (ngModelChange)="fromDate.set($event); load()" /></label>
+      <label class="date-filter">To <input type="date" [ngModel]="toDate()" (ngModelChange)="toDate.set($event); load()" /></label>
+      <button class="button button-outline button-small" type="button" (click)="load()">↻ Refresh</button>
+    </div>
+    @if (error()) { <div class="alert alert-error" role="alert"><span>!</span><div><strong>Could not complete request</strong><p>{{ error() }}</p></div><button class="text-button" type="button" (click)="load()">Retry</button></div> }
+    @if (success()) { <div class="module-feedback success-feedback" role="status">✓ {{ success() }}</div> }
+
+    @if (attendanceEditor()) {
+      <article class="panel module-editor">
+        <div class="panel-heading"><div><h2>{{ editingAttendanceId() ? 'Edit attendance' : 'Record attendance' }}</h2><span class="panel-subtitle">Add accurate check-in and check-out details for the selected employee.</span></div><button class="close-dialog" type="button" aria-label="Close form" (click)="closeEditors()">×</button></div>
+        <form class="module-form" #attendanceFormRef="ngForm" (ngSubmit)="saveAttendance()">
+          @if (isAdmin()) {
+            <label>Employee <select name="employeeId" [(ngModel)]="attendanceForm.employeeId" required><option [ngValue]="0" disabled>Select employee</option>@for (employee of employees(); track employee.id) { <option [ngValue]="employee.id">{{ employee.firstName }} {{ employee.lastName }} · #{{ employee.id }}</option> }</select></label>
+          } @else { <label>Employee <input [value]="employees()[0]?.firstName + ' ' + employees()[0]?.lastName" readonly /></label> }
+          <label>Date <input name="attendanceDate" type="date" [(ngModel)]="attendanceForm.attendanceDate" [max]="today()" required /></label>
+          <label>Check in <input name="checkIn" type="time" [(ngModel)]="attendanceForm.checkIn" /></label>
+          <label>Check out <input name="checkOut" type="time" [(ngModel)]="attendanceForm.checkOut" /></label>
+          <label>Status <select name="attendanceStatus" [(ngModel)]="attendanceForm.status" required>@for (status of attendanceStatuses; track status) { <option [value]="status">{{ status.replace('_', ' ') }}</option> }</select></label>
+          <div class="editor-actions"><button class="button button-outline" type="button" [disabled]="saving()" (click)="closeEditors()">Cancel</button><button class="button button-primary" type="submit" [disabled]="attendanceFormRef.invalid || saving() || attendanceForm.employeeId <= 0">{{ saving() ? 'Saving…' : 'Save attendance' }}</button></div>
+        </form>
+      </article>
+    }
+
+    <article class="panel module-table-panel">
+      <div class="panel-heading"><div><h2>Attendance records <span class="count-pill">{{ filteredAttendance().length }}</span></h2><span class="panel-subtitle">Clock-in/out and daily status</span></div></div>
+      @if (loading()) { <div class="table-message"><span class="spinner"></span>Loading attendance…</div> }
+      @else if (filteredAttendance().length === 0) { <div class="table-message empty-message"><strong>No attendance records found</strong><span>Adjust filters or record attendance to get started.</span></div> }
+      @else {
+        <div class="table-scroll"><table class="directory-table">
+          <thead><tr><th>EMPLOYEE</th><th>DATE</th><th>CHECK IN</th><th>CHECK OUT</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+          <tbody>@for (record of filteredAttendance(); track record.id) {
+            <tr><td><strong>{{ record.employeeName }}</strong><small class="table-secondary">#{{ record.employeeId }}</small></td><td>{{ record.attendanceDate | date:'mediumDate' }}</td><td>{{ record.checkIn || '—' }}</td><td>{{ record.checkOut || '—' }}</td><td><span class="status-pill" [class]="'status-pill status-' + record.status.toLowerCase()">{{ record.status.replace('_', ' ') }}</span></td><td><div class="row-actions">@if (isAdmin()) { <button class="action-button" title="Edit record" aria-label="Edit attendance" (click)="editAttendance(record)">✎</button><button class="action-button delete-action" title="Delete record" aria-label="Delete attendance" (click)="deleteAttendance(record)">⌫</button> }</div></td></tr>
+          }</tbody>
+        </table></div>
+        <div class="table-footer">Showing {{ filteredAttendance().length }} records</div>
+      }
+    </article>
+  } @else if (page === 'leave') {
+    <div class="page-heading module-heading">
+      <div><div class="eyebrow">PEOPLE OPERATIONS</div><h1>Leave Management</h1><p>{{ isAdmin() ? 'Support your team by reviewing upcoming time away.' : 'Plan time away and keep track of your requests.' }}</p></div>
+      @if (!isAdmin() && employees().length > 0) { <button class="button button-primary" type="button" (click)="startLeaveCreate()">＋ Apply for leave</button> }
+    </div>
+    <div class="module-toolbar">
+      <label class="directory-search"><span>⌕</span><input aria-label="Search leave applications" placeholder="Search employee, type or reason" [ngModel]="search()" (ngModelChange)="search.set($event)" /></label>
+      @if (isAdmin()) {
+        <select aria-label="Filter by employee" [ngModel]="employeeFilter()" (ngModelChange)="employeeFilter.set($event); load()"><option value="">All employees</option>@for (employee of employees(); track employee.id) { <option [value]="employee.id">{{ employee.firstName }} {{ employee.lastName }}</option> }</select>
+      }
+      <select aria-label="Filter by leave status" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event); load()"><option value="">All statuses</option>@for (status of leaveStatuses; track status) { <option [value]="status">{{ status }}</option> }</select>
+      <label class="date-filter">From <input type="date" [ngModel]="fromDate()" (ngModelChange)="fromDate.set($event); load()" /></label>
+      <label class="date-filter">To <input type="date" [ngModel]="toDate()" (ngModelChange)="toDate.set($event); load()" /></label>
+      <button class="button button-outline button-small" type="button" (click)="load()">↻ Refresh</button>
+    </div>
+    @if (isAdmin()) { <label class="review-note">Review note for next decision <input maxlength="500" placeholder="Optional note attached to approve/reject" [(ngModel)]="reviewNote" /></label> }
+    @if (error()) { <div class="alert alert-error" role="alert"><span>!</span><div><strong>Could not complete request</strong><p>{{ error() }}</p></div><button class="text-button" type="button" (click)="load()">Retry</button></div> }
+    @if (success()) { <div class="module-feedback success-feedback" role="status">✓ {{ success() }}</div> }
+    @if (leaveEditor()) {
+      <article class="panel module-editor"><div class="panel-heading"><div><h2>{{ editingLeaveId() ? 'Edit leave application' : 'New leave application' }}</h2><span class="panel-subtitle">Applications must have valid date ranges.</span></div><button class="close-dialog" type="button" aria-label="Close form" (click)="closeEditors()">×</button></div>
+        <form class="module-form" #leaveFormRef="ngForm" (ngSubmit)="saveLeave()">
+          @if (isAdmin()) { <label>Employee <select name="leaveEmployee" [(ngModel)]="leaveForm.employeeId" required><option [ngValue]="0" disabled>Select employee</option>@for (employee of employees(); track employee.id) { <option [ngValue]="employee.id">{{ employee.firstName }} {{ employee.lastName }} · #{{ employee.id }}</option> }</select></label> }
+          <label>Leave type <select name="leaveType" [(ngModel)]="leaveForm.leaveType" required>@for (type of leaveTypes; track type) { <option [value]="type">{{ type }}</option> }</select></label>
+          <label>Start date <input name="leaveStart" type="date" [(ngModel)]="leaveForm.startDate" required /></label><label>End date <input name="leaveEnd" type="date" [(ngModel)]="leaveForm.endDate" [min]="leaveForm.startDate" required /></label>
+          <label class="field-wide">Reason <textarea name="leaveReason" [(ngModel)]="leaveForm.reason" required maxlength="1000" rows="3"></textarea></label>
+          <div class="editor-actions"><button class="button button-outline" type="button" [disabled]="saving()" (click)="closeEditors()">Cancel</button><button class="button button-primary" type="submit" [disabled]="leaveFormRef.invalid || saving() || leaveForm.employeeId <= 0">{{ saving() ? 'Saving…' : editingLeaveId() ? 'Save changes' : 'Submit application' }}</button></div>
+        </form>
+      </article>
+    }
+    <article class="panel module-table-panel">
+      <div class="panel-heading"><div><h2>Leave applications <span class="count-pill">{{ filteredLeaves().length }}</span></h2><span class="panel-subtitle">Leave dates, decisions and review notes</span></div></div>
+      @if (loading()) { <div class="table-message"><span class="spinner"></span>Loading leave applications…</div> }
+      @else if (filteredLeaves().length === 0) { <div class="table-message empty-message"><strong>No leave applications found</strong><span>Adjust filters or submit a leave application.</span></div> }
+      @else {
+        <div class="table-scroll"><table class="directory-table">
+          <thead><tr><th>EMPLOYEE</th><th>TYPE</th><th>DATES</th><th>REASON / REVIEW</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+          <tbody>@for (leave of filteredLeaves(); track leave.id) {
+            <tr><td><strong>{{ leave.employeeName }}</strong><small class="table-secondary">#{{ leave.employeeId }}</small></td><td>{{ leave.leaveType }}</td><td>{{ leave.startDate | date:'mediumDate' }}<small class="table-secondary">to {{ leave.endDate | date:'mediumDate' }}</small></td><td class="reason-cell">{{ leave.reason }}@if (leave.reviewComment) { <small class="table-secondary">Review: {{ leave.reviewComment }}</small> }</td><td><span class="status-pill" [class]="'status-pill status-' + leave.status.toLowerCase()">{{ leave.status }}</span></td><td><div class="row-actions">@if (isAdmin() && leave.status === 'PENDING') { <button class="button button-small button-primary" type="button" [disabled]="saving()" (click)="reviewLeave(leave, 'APPROVED')">Approve</button><button class="button button-small button-outline" type="button" [disabled]="saving()" (click)="reviewLeave(leave, 'REJECTED')">Reject</button> } @else if (!isAdmin() && leave.status === 'PENDING') { <button class="action-button" title="Edit application" aria-label="Edit leave application" (click)="editLeave(leave)">✎</button><button class="action-button delete-action" title="Delete application" aria-label="Delete leave application" (click)="deleteLeave(leave)">⌫</button> }</div></td></tr>
+          }</tbody>
+        </table></div>
+        <div class="table-footer">Showing {{ filteredLeaves().length }} applications</div>
+      }
+    </article>
+  } @else if (page === 'payroll') {
+    <div class="page-heading module-heading">
+      <div><div class="eyebrow">PEOPLE OPERATIONS</div><h1>Payroll</h1><p>{{ isAdmin() ? 'Manage monthly pay and compensation for your team.' : 'View your latest pay details and salary history.' }}</p></div>
+      @if (isAdmin()) { <button class="button button-primary" type="button" (click)="startPayrollCreate()">＋ Add payroll record</button> }
+    </div>
+    <div class="module-toolbar">
+      <label class="directory-search"><span>⌕</span><input aria-label="Search payroll" placeholder="Search employee or period" [ngModel]="search()" (ngModelChange)="search.set($event)" /></label>
+      @if (isAdmin()) { <select aria-label="Filter by employee" [ngModel]="employeeFilter()" (ngModelChange)="employeeFilter.set($event); load()"><option value="">All employees</option>@for (employee of employees(); track employee.id) { <option [value]="employee.id">{{ employee.firstName }} {{ employee.lastName }}</option> }</select> }
+      <label class="period-filter">From <input type="month" [ngModel]="fromPeriod()" (ngModelChange)="fromPeriod.set($event); load()" /></label>
+      <label class="period-filter">To <input type="month" [ngModel]="toPeriod()" (ngModelChange)="toPeriod.set($event); load()" /></label>
+      <button class="button button-outline button-small" type="button" (click)="load()">↻ Refresh</button>
+    </div>
+    @if (error()) { <div class="alert alert-error" role="alert"><span>!</span><div><strong>Could not complete request</strong><p>{{ error() }}</p></div><button class="text-button" type="button" (click)="load()">Retry</button></div> }
+    @if (success()) { <div class="module-feedback success-feedback" role="status">✓ {{ success() }}</div> }
+    @if (payrollEditor()) {
+      <article class="panel module-editor"><div class="panel-heading"><div><h2>{{ editingPayrollId() ? 'Edit payroll record' : 'Create payroll record' }}</h2><span class="panel-subtitle">Net pay is calculated from salary, allowances and deductions.</span></div><button class="close-dialog" type="button" aria-label="Close form" (click)="closeEditors()">×</button></div>
+        <form class="module-form" #payrollFormRef="ngForm" (ngSubmit)="savePayroll()">
+          <label>Employee <select name="payrollEmployee" [(ngModel)]="payrollForm.employeeId" (ngModelChange)="selectPayrollEmployee($event)" required><option [ngValue]="0" disabled>Select employee</option>@for (employee of employees(); track employee.id) { <option [ngValue]="employee.id">{{ employee.firstName }} {{ employee.lastName }} · #{{ employee.id }}</option> }</select></label>
+          <label>Salary period <input name="salaryPeriod" type="month" [(ngModel)]="payrollForm.salaryPeriod" required /></label>
+          <label>Monthly basic salary <input name="basicSalary" type="number" [(ngModel)]="payrollForm.basicSalary" min="0" step="0.01" required /><small class="field-hint">{{ payrollSalaryHint() }}</small></label>
+          <label>Allowances <input name="allowances" type="number" [(ngModel)]="payrollForm.allowances" min="0" step="0.01" required /></label>
+          <label>Deductions <input name="deductions" type="number" [(ngModel)]="payrollForm.deductions" min="0" step="0.01" required /></label>
+          <label>Payment status <select name="paymentStatus" [(ngModel)]="payrollForm.paymentStatus" required>@for (status of payrollPaymentStatuses; track status) { <option [value]="status">{{ status === 'PAID' ? 'Paid' : 'Pending' }}</option> }</select></label>
+          <div class="editor-actions"><button class="button button-outline" type="button" [disabled]="saving()" (click)="closeEditors()">Cancel</button><button class="button button-primary" type="submit" [disabled]="payrollFormRef.invalid || saving() || payrollForm.employeeId <= 0">{{ saving() ? 'Saving…' : editingPayrollId() ? 'Save changes' : 'Create payroll' }}</button></div>
+        </form>
+      </article>
+    }
+    <article class="panel module-table-panel">
+      <div class="panel-heading"><div><h2>Payroll records <span class="count-pill">{{ filteredPayroll().length }}</span></h2><span class="panel-subtitle">Salary, deductions and payment status</span></div></div>
+      @if (loading()) { <div class="table-message"><span class="spinner"></span>Loading payroll…</div> }
+      @else if (filteredPayroll().length === 0) { <div class="table-message empty-message"><strong>No payroll records found</strong><span>Adjust the period filters or add a payroll record.</span></div> }
+      @else {
+        <div class="table-scroll"><table class="directory-table">
+          <thead><tr><th>EMPLOYEE</th><th>PERIOD</th><th>BASIC</th><th>ALLOWANCES</th><th>DEDUCTIONS</th><th>NET SALARY</th><th>PAYMENT</th><th>ACTIONS</th></tr></thead>
+          <tbody>@for (record of filteredPayroll(); track record.id) {
+            <tr><td><strong>{{ record.employeeName }}</strong><small class="table-secondary">#{{ record.employeeId }}</small></td><td>{{ record.salaryPeriod }}</td><td>{{ record.basicSalary | currency }}</td><td>{{ record.allowances | currency }}</td><td>{{ record.deductions | currency }}</td><td><strong>{{ record.netSalary | currency }}</strong></td><td><span class="status-pill" [class]="'status-pill status-' + record.paymentStatus.toLowerCase()">{{ record.paymentStatus }}</span></td><td><div class="row-actions">@if (isAdmin()) { <button class="action-button" title="Edit record" aria-label="Edit payroll record" (click)="editPayroll(record)">✎</button><button class="action-button delete-action" title="Delete record" aria-label="Delete payroll record" (click)="deletePayroll(record)">⌫</button> }</div></td></tr>
+          }</tbody>
+        </table></div>
+        <div class="table-footer">Showing {{ filteredPayroll().length }} records</div>
+      }
+    </article>
+  } @else {
+    <div class="page-heading module-heading">
+      <div><div class="eyebrow">PEOPLE OPERATIONS</div><h1>Recruitment</h1><p>Discover great candidates and find the right people for your team.</p></div>
+      @if (isAdmin() && tab() === 'jobs') { <button class="button button-primary" type="button" (click)="startJobCreate()">＋ Create job opening</button> }
+      @if (isAdmin() && tab() === 'candidates') { <button class="button button-primary" type="button" (click)="startCandidateCreate()">＋ Add candidate</button> }
+    </div>
+    @if (isAdmin()) {
+      <div class="recruitment-summary">
+        <article class="panel"><span>Open positions</span><strong>{{ openPositionsCount() }}</strong></article>
+        <article class="panel"><span>Applicants</span><strong>{{ applications().length }}</strong></article>
+        <article class="panel"><span>Interviews</span><strong>{{ interviewCount() }}</strong></article>
+      </div>
+    }
+    <div class="recruitment-tabs" role="tablist">
+      <button type="button" role="tab" [attr.aria-selected]="tab() === 'jobs'" [class.selected]="tab() === 'jobs'" (click)="setRecruitmentTab('jobs')">Job openings <span>{{ jobs().length }}</span></button>
+      @if (isAdmin()) { <button type="button" role="tab" [attr.aria-selected]="tab() === 'candidates'" [class.selected]="tab() === 'candidates'" (click)="setRecruitmentTab('candidates')">Candidates <span>{{ candidates().length }}</span></button> }
+      <button type="button" role="tab" [attr.aria-selected]="tab() === 'applications'" [class.selected]="tab() === 'applications'" (click)="setRecruitmentTab('applications')">{{ isAdmin() ? 'Applications' : 'My applications' }} <span>{{ applications().length }}</span></button>
+    </div>
+    <div class="module-toolbar">
+      <label class="directory-search"><span>⌕</span><input aria-label="Search recruitment" placeholder="Search roles, people or status" [ngModel]="search()" (ngModelChange)="search.set($event)" /></label>
+      @if (tab() === 'jobs' && isAdmin()) { <select aria-label="Filter job status" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event); load()"><option value="">All job statuses</option>@for (status of jobStatuses; track status) { <option [value]="status">{{ status }}</option> }</select> }
+      @if (tab() === 'applications') {
+        @if (isAdmin()) { <select aria-label="Filter applications by job" [ngModel]="jobFilter()" (ngModelChange)="jobFilter.set($event); load()"><option value="">All positions</option>@for (job of jobs(); track job.id) { <option [value]="job.id">{{ job.title }}</option> }</select> }
+        <select aria-label="Filter application status" [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event); load()"><option value="">All application statuses</option>@for (status of applicationStatuses; track status) { <option [value]="status">{{ status }}</option> }</select>
+      }
+      <button class="button button-outline button-small" type="button" (click)="load()">↻ Refresh</button>
+    </div>
+    @if (error()) { <div class="alert alert-error" role="alert"><span>!</span><div><strong>Could not complete request</strong><p>{{ error() }}</p></div><button class="text-button" type="button" (click)="load()">Retry</button></div> }
+    @if (success()) { <div class="module-feedback success-feedback" role="status">✓ {{ success() }}</div> }
+
+    @if (jobEditor()) {
+      <article class="panel module-editor"><div class="panel-heading"><div><h2>{{ editingJobId() ? 'Edit job opening' : 'Create job opening' }}</h2><span class="panel-subtitle">Share the role details candidates need to get started.</span></div><button class="close-dialog" type="button" aria-label="Close form" (click)="closeEditors()">×</button></div>
+        <form class="module-form" #jobFormRef="ngForm" (ngSubmit)="saveJob()">
+          <label>Job title <input name="jobTitle" [(ngModel)]="jobForm.title" required maxlength="150" /></label><label>Department <input name="jobDepartment" list="job-departments" [(ngModel)]="jobForm.department" required maxlength="100" placeholder="Choose or type a department" /><datalist id="job-departments">@for (department of departmentOptions(); track department) { <option [value]="department"></option> }</datalist></label><label>Location <input name="jobLocation" [(ngModel)]="jobForm.location" required maxlength="100" /></label><label>Employment type <select name="jobType" [(ngModel)]="jobForm.employmentType" required>@if (!employmentTypes.includes(jobForm.employmentType)) { <option [value]="jobForm.employmentType">{{ jobForm.employmentType }}</option> }@for (type of employmentTypes; track type) { <option [value]="type">{{ type }}</option> }</select></label>
+          <label>Minimum salary <input name="salaryMin" type="number" [(ngModel)]="jobForm.salaryMin" min="0" step="0.01" /></label><label>Maximum salary <input name="salaryMax" type="number" [(ngModel)]="jobForm.salaryMax" min="0" step="0.01" /></label><label>Opening status <select name="jobStatus" [(ngModel)]="jobForm.status" required>@for (status of jobStatuses; track status) { <option [value]="status">{{ status }}</option> }</select></label>
+          @if (invalidSalaryRange()) { <p class="salary-range-error field-wide" role="alert">Maximum salary must be greater than or equal to minimum salary.</p> }
+          <label class="field-wide">Description <textarea name="jobDescription" [(ngModel)]="jobForm.description" required maxlength="5000" rows="4"></textarea></label>
+          <div class="editor-actions"><button class="button button-outline" type="button" [disabled]="saving()" (click)="closeEditors()">Cancel</button><button class="button button-primary" type="submit" [disabled]="jobFormRef.invalid || saving() || invalidSalaryRange()">{{ saving() ? 'Saving…' : editingJobId() ? 'Save changes' : 'Create opening' }}</button></div>
+        </form>
+      </article>
+    }
+    @if (candidateEditor()) {
+      <article class="panel module-editor"><div class="panel-heading"><div><h2>{{ editingCandidateId() ? 'Edit candidate' : 'Add candidate' }}</h2><span class="panel-subtitle">Keep candidate contact details and experience in one place.</span></div><button class="close-dialog" type="button" aria-label="Close form" (click)="closeEditors()">×</button></div>
+        <form class="module-form" #candidateFormRef="ngForm" (ngSubmit)="saveCandidate()">
+          <label>Full name <input name="candidateName" [(ngModel)]="candidateForm.name" required maxlength="100" /></label><label>Email <input name="candidateEmail" type="email" [(ngModel)]="candidateForm.email" required maxlength="254" /></label><label>Phone <input name="candidatePhone" type="tel" [(ngModel)]="candidateForm.phone" pattern="[+0-9() .-]{7,30}" /></label>
+          <div class="editor-actions"><button class="button button-outline" type="button" [disabled]="saving()" (click)="closeEditors()">Cancel</button><button class="button button-primary" type="submit" [disabled]="candidateFormRef.invalid || saving()">{{ saving() ? 'Saving…' : editingCandidateId() ? 'Save changes' : 'Add candidate' }}</button></div>
+        </form>
+      </article>
+    }
+    @if (applyingJob(); as job) {
+      <article class="panel module-editor"><div class="panel-heading"><div><h2>Apply for {{ job.title }}</h2><span class="panel-subtitle">Share a few details to introduce yourself to the hiring team.</span></div><button class="close-dialog" type="button" aria-label="Close application form" (click)="closeEditors()">×</button></div>
+        <form class="module-form" #applicationFormRef="ngForm" (ngSubmit)="applyForJob()">
+          <label>Phone (optional) <input name="applicantPhone" type="tel" [(ngModel)]="applicationForm.phone" pattern="[+0-9() .-]{7,30}" /></label><label class="field-wide">Cover letter (optional) <textarea name="coverLetter" [(ngModel)]="applicationForm.coverLetter" maxlength="3000" rows="4"></textarea></label>
+          <div class="editor-actions"><button class="button button-outline" type="button" [disabled]="saving()" (click)="closeEditors()">Cancel</button><button class="button button-primary" type="submit" [disabled]="applicationFormRef.invalid || saving()">{{ saving() ? 'Submitting…' : 'Submit application' }}</button></div>
+        </form>
+      </article>
+    }
+
+    <article class="panel module-table-panel">
+      <div class="panel-heading"><div><h2>{{ tab() === 'jobs' ? 'Job openings' : tab() === 'candidates' ? 'Candidates' : 'Applications' }} <span class="count-pill">{{ tab() === 'jobs' ? filteredJobs().length : tab() === 'candidates' ? filteredCandidates().length : filteredApplications().length }}</span></h2><span class="panel-subtitle">{{ tab() === 'jobs' ? 'Browse and manage recruitment opportunities' : tab() === 'candidates' ? 'Candidate profiles managed by administrators' : 'Application pipeline and decisions' }}</span></div></div>
+      @if (loading()) { <div class="table-message"><span class="spinner"></span>Loading recruitment data…</div> }
+      @else if (tab() === 'jobs' && filteredJobs().length === 0) { <div class="table-message empty-message"><strong>No job openings found</strong><span>Try a different search or create an opening.</span></div> }
+      @else if (tab() === 'candidates' && filteredCandidates().length === 0) { <div class="table-message empty-message"><strong>No candidates found</strong><span>Add a candidate profile to get started.</span></div> }
+      @else if (tab() === 'applications' && filteredApplications().length === 0) { <div class="table-message empty-message"><strong>No applications found</strong><span>Applications will appear here after an employee applies for a job.</span></div> }
+      @else if (tab() === 'jobs') {
+        <div class="table-scroll"><table class="directory-table">
+          <thead><tr><th>POSITION</th><th>DEPARTMENT</th><th>LOCATION</th><th>TYPE</th><th>SALARY RANGE</th>@if (isAdmin()) { <th>APPLICANTS</th> }<th>STATUS</th><th>ACTIONS</th></tr></thead>
+          <tbody>@for (job of filteredJobs(); track job.id) {
+            <tr><td><strong>{{ job.title }}</strong><small class="table-secondary">Posted {{ job.postedDate | date:'mediumDate' }}</small><small class="table-secondary job-description">{{ job.description }}</small></td><td>{{ job.department }}</td><td>{{ job.location }}</td><td>{{ job.employmentType }}</td><td>{{ job.salaryMin == null ? '—' : (job.salaryMin | currency) }} – {{ job.salaryMax == null ? '—' : (job.salaryMax | currency) }}</td>@if (isAdmin()) { <td><button class="text-button" type="button" (click)="showJobApplications(job)">{{ applicationCount(job.id) }} · View applicants</button></td> }<td><span class="status-pill" [class]="'status-pill status-' + job.status.toLowerCase()">{{ job.status }}</span></td><td><div class="row-actions">@if (isAdmin()) { <button class="action-button" title="Edit job" aria-label="Edit job" (click)="editJob(job)">✎</button><button class="action-button delete-action" title="Delete job" aria-label="Delete job" (click)="deleteJob(job)">⌫</button> } @else if (canApply(job)) { <button class="button button-primary button-small" type="button" (click)="beginApplication(job)">Apply</button> } @else if (!isAdmin() && applicationStatusForJob(job); as appStatus) { <span class="table-secondary">{{ appStatus }}</span> }</div></td></tr>
+          }</tbody>
+        </table></div>
+      } @else if (tab() === 'candidates') {
+        <div class="table-scroll"><table class="directory-table">
+          <thead><tr><th>NAME</th><th>EMAIL</th><th>PHONE</th><th>ACTIONS</th></tr></thead>
+          <tbody>@for (candidate of filteredCandidates(); track candidate.id) {
+            <tr><td><strong>{{ candidate.name }}</strong><small class="table-secondary">Candidate #{{ candidate.id }}</small></td><td>{{ candidate.email }}</td><td>{{ candidate.phone || '—' }}</td><td><div class="row-actions"><button class="action-button" title="Edit candidate" aria-label="Edit candidate" (click)="editCandidate(candidate)">✎</button><button class="action-button delete-action" title="Delete candidate" aria-label="Delete candidate" (click)="deleteCandidate(candidate)">⌫</button></div></td></tr>
+          }</tbody>
+        </table></div>
+      } @else {
+        <div class="table-scroll"><table class="directory-table">
+          <thead><tr><th>APPLICANT</th><th>POSITION</th><th>CONTACT</th><th>APPLIED</th><th>STATUS</th><th>ACTIONS</th></tr></thead>
+          <tbody>@for (application of filteredApplications(); track application.id) {
+            <tr><td><strong>{{ application.candidateName }}</strong><small class="table-secondary">#{{ application.candidateId }}</small></td><td>{{ application.jobTitle }}</td><td>{{ application.candidateEmail }}<small class="table-secondary">{{ application.candidatePhone || 'No phone provided' }}</small></td><td>{{ application.appliedAt | date:'mediumDate' }}</td><td><span class="status-pill" [class]="'status-pill status-' + application.status.toLowerCase()">{{ application.status }}</span></td><td><div class="row-actions">@if (isAdmin() && transitionOptions(application.status).length > 0) { <select class="status-select" [ngModel]="applicationStatusSelection[application.id] || ''" (ngModelChange)="setApplicationStatus(application.id, $event)" aria-label="Choose next application status"><option value="" disabled>Advance status…</option>@for (status of transitionOptions(application.status); track status) { <option [value]="status">{{ status }}</option> }</select><button class="button button-outline button-small" type="button" [disabled]="!applicationStatusSelection[application.id] || saving()" (click)="saveApplicationStatus(application)">Update</button> } @else if (!isAdmin() && application.status === 'APPLIED') { <button class="button button-outline button-small" type="button" [disabled]="saving()" (click)="withdrawApplication(application)">Withdraw</button> }</div></td></tr>
+          }</tbody>
+        </table></div>
+      }
+      @if (!loading() && ((tab() === 'jobs' && filteredJobs().length > 0) || (tab() === 'candidates' && filteredCandidates().length > 0) || (tab() === 'applications' && filteredApplications().length > 0))) {
+        <div class="table-footer">Showing {{ tab() === 'jobs' ? filteredJobs().length : tab() === 'candidates' ? filteredCandidates().length : filteredApplications().length }} records</div>
+      }
+    </article>
+  }
+</section>

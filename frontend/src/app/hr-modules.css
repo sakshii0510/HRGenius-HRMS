@@ -1,0 +1,55 @@
+:host { display: block; }
+.hr-module { padding-top: 24px; }
+.module-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0 0 18px; }
+.module-toolbar select, .module-toolbar input, .module-form input, .module-form select, .module-form textarea, .status-select { min-height: 42px; padding: 9px 12px; border: 1px solid #e4e7ed; border-radius: 7px; outline: 0; background: #fff; color: #414957; font-size: 13px; }
+.module-toolbar select:focus, .module-toolbar input:focus, .module-form input:focus, .module-form select:focus, .module-form textarea:focus, .status-select:focus { border-color: #8eb4fa; box-shadow: 0 0 0 3px #2864e814; }
+.module-toolbar .directory-search { flex: 1 1 230px; max-width: 320px; }
+.module-toolbar > select { min-width: 132px; }
+.date-filter, .period-filter { display: flex; align-items: center; gap: 8px; color: #858b96; font-size: 11px; white-space: nowrap; }
+.date-filter input, .period-filter input { width: 150px; }
+.module-table-panel { overflow: hidden; }
+.module-table-panel > .panel-heading { padding: 19px 21px 16px; }
+.module-table-panel .directory-table { min-width: 850px; }
+.module-table-panel .row-actions { align-items: center; flex-wrap: nowrap; }
+.module-editor { margin-bottom: 17px; padding: 0 21px 20px; }
+.module-editor .panel-heading { padding: 17px 0 15px; }
+.module-editor .panel-heading h2 { margin: 0 0 5px; font: 700 16px Manrope,sans-serif; }
+.module-form { display: grid; grid-template-columns: repeat(3, minmax(150px, 1fr)); gap: 16px; align-items: start; }
+.module-form label { display: grid; gap: 7px; color: #626a77; font-size: 12px; font-weight: 600; }
+.module-form input, .module-form select, .module-form textarea { width: 100%; font-size: 13px; font-weight: 400; }
+.module-form textarea { resize: vertical; }
+.module-form .field-wide { grid-column: 1 / -1; }
+.editor-actions { display: flex; justify-content: flex-end; gap: 8px; grid-column: 1 / -1; }
+.reason-cell { max-width: 260px; white-space: normal; }
+.reason-cell .table-secondary { max-width: 260px; white-space: normal; }
+.job-description { max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.module-feedback { margin-bottom: 15px; padding: 13px 15px; border-radius: 8px; font-size: 12px; }
+.success-feedback { border: 1px solid #d6efdf; background: #f1faf4; color: #347b4d; }
+.review-note { display: flex; align-items: center; gap: 10px; margin: -3px 0 15px; color: #737a87; font-size: 11px; }
+.review-note input { width: min(420px, 60vw); min-height: 38px; padding: 8px 10px; border: 1px solid #e4e7ed; border-radius: 7px; font: inherit; }
+.recruitment-tabs { display: flex; gap: 5px; margin: 0 0 13px; border-bottom: 1px solid #e9ebef; }
+.recruitment-tabs button { display: flex; align-items: center; gap: 8px; margin-bottom: -1px; padding: 11px 15px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #737a87; font-size: 12px; }
+.recruitment-tabs button.selected { border-color: #2864e8; color: #2458ba; font-weight: 700; }
+.recruitment-tabs button span { padding: 3px 7px; border-radius: 12px; background: #f1f3f6; font-size: 10px; }
+.status-select { min-height: 36px; max-width: 170px; padding: 6px 9px; }
+.module-table-panel td small { display: block; margin-top: 4px; }
+
+@media (max-width: 850px) {
+  .module-toolbar { align-items: center; }
+  .module-toolbar .directory-search { flex-basis: 100%; max-width: none; }
+  .module-toolbar > .button { min-height: 42px; }
+  .module-form { grid-template-columns: repeat(2, minmax(130px, 1fr)); }
+}
+@media (max-width: 560px) {
+  .hr-module { padding: 15px 12px 24px; }
+  .module-heading { flex-wrap: wrap; align-items: flex-start; }
+  .module-heading > div { flex: 1 1 100%; }
+  .module-heading > .button { margin-top: 8px; }
+  .module-toolbar > .button { align-self: center; }
+  .module-form { grid-template-columns: 1fr; }
+  .module-form .field-wide, .editor-actions { grid-column: auto; }
+  .date-filter, .period-filter { flex: 1 1 45%; justify-content: space-between; }
+  .date-filter input, .period-filter input { width: 70%; }
+  .recruitment-tabs { overflow-x: auto; }
+  .recruitment-tabs button { flex: 0 0 auto; padding-right: 8px; padding-left: 8px; }
+}

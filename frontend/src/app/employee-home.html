@@ -1,0 +1,141 @@
+<section class="page-content employee-home">
+  <div class="page-heading employee-home-heading">
+    <div>
+      <div class="eyebrow">MY WORKSPACE</div>
+      <h1>Welcome, {{ user()?.name?.split(' ')?.[0] || 'there' }} <span class="wave">✦</span></h1>
+      <p>Your attendance, requests, pay and work in one place.</p>
+    </div>
+    <div class="employee-home-actions">
+      <a class="button button-outline" routerLink="/leave">＋ Request leave</a>
+      <a class="button button-primary" routerLink="/recruitment">Browse jobs</a>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="alert alert-error" role="alert"><span>!</span><div><strong>Dashboard unavailable</strong><p>{{ error() }}</p></div><button class="text-button" type="button" (click)="load()">Retry</button></div>
+  }
+  @if (!loading() && !employee() && !error()) {
+    <div class="connection-banner connection-error"><span class="connection-icon">!</span><div><strong>Your employee profile isn’t ready yet</strong><span>Please contact your HR administrator to connect your account with your employee details.</span></div></div>
+  }
+  @if (loading()) { <div class="panel table-message"><span class="spinner"></span>Loading your HR data…</div> }
+  @else {
+    <div class="employee-summary-grid">
+      <article class="panel employee-summary-card"><span>Leave requests</span><strong>{{ leaves().length }}</strong><small>{{ pendingLeaveCount() }} awaiting review</small><a routerLink="/leave">View my leave →</a></article>
+      <article class="panel employee-summary-card"><span>Attendance records</span><strong>{{ attendance().length }}</strong><small>Personal attendance history</small><a routerLink="/attendance">View attendance →</a></article>
+      <article class="panel employee-summary-card"><span>My applications</span><strong>{{ applications().length }}</strong><small>{{ openJobs().length }} open jobs to explore</small><a routerLink="/recruitment">Browse jobs & applications →</a></article>
+      <article class="panel employee-summary-card"><span>Latest payroll</span><strong>{{ latestPayroll() ? (latestPayroll()!.netSalary | currency) : '—' }}</strong><small>{{ latestPayroll() ? latestPayroll()!.salaryPeriod : 'No payroll record yet' }}</small><a routerLink="/payroll">View my payslips →</a></article>
+    </div>
+
+    <!-- Recent Activity strip for employees -->
+    @if (notifService.notifications().length > 0) {
+      <article class="panel emp-activity-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Recent Activity</h2>
+            <span class="panel-subtitle">Your latest HR updates</span>
+          </div>
+          @if (notifService.unreadCount() > 0) {
+            <span class="emp-activity-badge">{{ notifService.unreadCount() }} new</span>
+          }
+          <button class="text-button" (click)="notifService.togglePanel()">View all →</button>
+        </div>
+        <div class="emp-activity-list">
+          @for (notif of notifService.notifications().slice(0, 4); track notif.id) {
+            <div class="emp-activity-item" [class.emp-activity-unread]="!notif.read" (click)="notifService.markRead(notif.id)">
+              <span class="emp-activity-icon" [class]="'notif-icon-' + notif.type">{{ notif.icon }}</span>
+              <div class="emp-activity-body">
+                <span class="emp-activity-title">{{ notif.title }}</span>
+                <span class="emp-activity-msg">{{ notif.message }}</span>
+              </div>
+              @if (!notif.read) { <span class="emp-activity-dot"></span> }
+            </div>
+          }
+        </div>
+      </article>
+    }
+
+    <div class="employee-dashboard-columns">
+      <div class="employee-dashboard-main">
+        <article class="panel employee-data-panel">
+          <div class="panel-heading"><div><h2>My leave requests</h2><span class="panel-subtitle">Only your own applications are shown</span></div><a class="text-button" routerLink="/leave">All requests →</a></div>
+          @if (recentLeaves().length === 0) { <div class="dashboard-empty"><strong>No leave requests yet</strong><span>Submit a request and track its approval here.</span><a class="button button-outline button-small" routerLink="/leave">Apply for leave</a></div> }
+          @else {
+            <div class="employee-record-list">@for (leave of recentLeaves(); track leave.id) {
+              <div class="employee-record-row"><span class="employee-record-icon leave-icon">▣</span><div class="employee-record-copy"><strong>{{ leave.leaveType }} leave</strong><small>{{ leave.startDate | date:'mediumDate' }} – {{ leave.endDate | date:'mediumDate' }}</small></div><span class="status-pill" [class]="'status-pill status-' + leave.status.toLowerCase()">{{ leave.status }}</span></div>
+            }</div>
+          }
+        </article>
+
+        <article class="panel employee-data-panel">
+          <div class="panel-heading"><div><h2>My attendance</h2><span class="panel-subtitle">Recent attendance records</span></div><a class="text-button" routerLink="/attendance">View all →</a></div>
+          @if (latestAttendance().length === 0) { <div class="dashboard-empty"><strong>No attendance records yet</strong><span>Your HR team’s attendance records will appear here.</span></div> }
+          @else { <div class="table-scroll"><table class="directory-table employee-home-table"><thead><tr><th>DATE</th><th>CHECK IN</th><th>CHECK OUT</th><th>STATUS</th></tr></thead><tbody>@for (record of latestAttendance(); track record.id) {
+            <tr><td>{{ record.attendanceDate | date:'mediumDate' }}</td><td>{{ record.checkIn || '—' }}</td><td>{{ record.checkOut || '—' }}</td><td><span class="status-pill" [class]="'status-pill status-' + record.status.toLowerCase()">{{ record.status.replaceAll('_', ' ') }}</span></td></tr>
+          }</tbody></table></div> }
+        </article>
+
+        <article class="panel employee-data-panel">
+          <div class="panel-heading"><div><h2>My job applications</h2><span class="panel-subtitle">HR reviews applications submitted from your account</span></div><a class="text-button" routerLink="/recruitment">Recruitment →</a></div>
+          @if (recentApplications().length === 0) { <div class="dashboard-empty"><strong>No applications submitted</strong><span>Browse open jobs and submit an application. HR will see it in Recruitment → Applications.</span><a class="button button-primary button-small" routerLink="/recruitment">Browse open jobs</a></div> }
+          @else { <div class="employee-record-list">@for (application of recentApplications(); track application.id) {
+            <div class="employee-record-row"><span class="employee-record-icon job-icon">♙</span><div class="employee-record-copy"><strong>{{ application.jobTitle }}</strong><small>Applied {{ application.appliedAt | date:'mediumDate' }}</small></div><span class="status-pill" [class]="'status-pill status-' + application.status.toLowerCase()">{{ application.status }}</span></div>
+          }</div> }
+        </article>
+      </div>
+
+      <div class="employee-dashboard-side">
+        @if (preferences().showTasks) {
+          <article class="panel employee-data-panel">
+            <div class="panel-heading"><div><h2>My tasks</h2><span class="panel-subtitle">{{ assignedWork().length }} outstanding items</span></div><a class="text-button" routerLink="/tasks">View all →</a></div>
+            @if (assignedWork().length === 0) { <div class="dashboard-empty"><strong>All caught up</strong><span>No open tasks or onboarding items.</span></div> }
+            @else { @for (item of assignedWork(); track item.id) {
+              <article class="employee-task-card">
+                <div class="employee-task-main">
+                  <span class="employee-record-icon task-icon">{{ item.module === 'TASKS' ? '✓' : '✦' }}</span>
+                  <div class="employee-task-copy"><strong>{{ item.title }}</strong><p>{{ item.description || 'No additional details.' }}</p></div>
+                </div>
+                <div class="employee-task-footer">
+                  <span class="employee-work-type">{{ item.module === 'TASKS' ? 'TASK' : 'ONBOARDING' }}</span>
+                  <span class="employee-work-due">{{ item.dueDate ? ('Due ' + (item.dueDate | date:'mediumDate')) : 'No due date' }}</span>
+                  <a class="text-button" routerLink="/tasks">Open →</a>
+                </div>
+              </article>
+            } }
+          </article>
+        }
+        @if (preferences().showTraining) {
+          <article class="panel employee-data-panel">
+            <div class="panel-heading"><div><h2>My training</h2><span class="panel-subtitle">Courses and assigned progress</span></div><a class="text-button" routerLink="/training">Training →</a></div>
+            @if (training().length === 0) { <div class="dashboard-empty"><strong>No training assigned</strong><span>Published courses will appear in your training page.</span></div> }
+            @else {
+              <div class="employee-training-list">@for (course of training().slice(0, 4); track course.id) {
+                <article class="employee-training-card">
+                  <span class="employee-record-icon training-icon">▤</span>
+                  <div class="employee-record-copy"><strong>{{ course.title }}</strong><small>{{ course.description || 'Continue your professional development.' }}</small></div>
+                  <span class="employee-training-status">{{ course.status.replaceAll('_', ' ') }}</span>
+                </article>
+              }</div>
+            }
+          </article>
+        }
+        @if (preferences().showAnnouncements) {
+          <article class="panel employee-data-panel">
+            <div class="panel-heading"><div><h2>Company updates</h2><span class="panel-subtitle">Published announcements</span></div><a class="text-button" routerLink="/announcements">All updates →</a></div>
+            @if (announcements().length === 0) { <div class="dashboard-empty"><strong>No announcements yet</strong><span>Published company updates will appear here.</span></div> }
+            @else {
+              <div class="employee-announcement-list">@for (announcement of announcements().slice(0, 4); track announcement.id) {
+                <article class="employee-announcement-card">
+                  <div class="employee-announcement-icon">↗</div>
+                  <div class="employee-announcement-copy">
+                    <div class="employee-announcement-heading"><strong>{{ announcement.title }}</strong><time>{{ announcement.updatedAt | date:'mediumDate' }}</time></div>
+                    <p>{{ announcement.description || 'No additional details.' }}</p>
+                  </div>
+                </article>
+              }</div>
+            }
+          </article>
+        }
+      </div>
+    </div>
+  }
+</section>

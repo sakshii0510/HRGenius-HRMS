@@ -1,0 +1,63 @@
+:host { display: block; }
+.employee-home { padding-top: 30px; }
+.employee-home-heading { align-items: center; }
+.employee-home-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.employee-summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 19px; }
+.employee-summary-card { display: grid; gap: 8px; min-height: 145px; padding: 17px; }
+.employee-summary-card > span { color: #747b87; font-size: 13px; }
+.employee-summary-card > strong { color: #252b37; font: 700 26px Manrope,sans-serif; }
+.employee-summary-card > small { color: #9198a4; font-size: 11px; }
+.employee-summary-card > a { align-self: end; color: #3268d7; font-size: 11px; font-weight: 600; text-decoration: none; }
+.employee-dashboard-columns { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(260px, .9fr); align-items: start; gap: 18px; }
+.employee-dashboard-main, .employee-dashboard-side { display: grid; align-content: start; gap: 17px; min-width: 0; }
+.employee-data-panel { overflow: hidden; }
+.employee-data-panel > .panel-heading { align-items: center; padding: 18px 19px; border-bottom: 1px solid #f0f2f5; }
+.employee-data-panel > .panel-heading > div { min-width: 0; }
+.employee-data-panel > .panel-heading > a { flex: 0 0 auto; margin-left: auto; white-space: nowrap; }
+.employee-data-panel h2 { margin: 0 0 4px; font: 700 16px Manrope,sans-serif; }
+.employee-record-list { padding: 0 18px; }
+.employee-record-row { display: flex; align-items: center; gap: 11px; min-height: 64px; border-top: 1px solid #eff0f3; }
+.employee-record-icon { display: grid; flex: 0 0 34px; width: 34px; height: 34px; place-items: center; border-radius: 9px; background: #edf4ff; color: #4775cd; font-size: 16px; }
+.leave-icon { background: #f2efff; color: #8b75ce; }.job-icon { background: #fff1e8; color: #d08d5a; }.training-icon { background: #edf8f2; color: #58a37b; }
+.employee-record-copy { display: grid; flex: 1; min-width: 0; gap: 5px; }
+.employee-record-copy strong { overflow: hidden; color: #414957; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.employee-record-copy small { color: #9298a3; font-size: 11px; }
+.employee-home .status-pill { display: inline-flex; flex: 0 0 auto; padding: 5px 8px; border-radius: 20px; background: #f0f2f5; color: #626a77; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.employee-home .status-pending, .employee-home .status-applied, .employee-home .status-screening, .employee-home .status-interview { background: #fff6e8; color: #a16d20; }
+.employee-home .status-approved, .employee-home .status-offered, .employee-home .status-present { background: #edf8f1; color: #348256; }
+.employee-home .status-rejected, .employee-home .status-absent { background: #fff0ef; color: #b34f4b; }
+.employee-home-table { min-width: 550px !important; }
+.employee-home-table th, .employee-home-table td { padding: 12px 15px; }
+.employee-home .dashboard-empty { display: grid; justify-items: start; gap: 8px; padding: 18px; color: #747b87; font-size: 14px; line-height: 1.5; }
+.employee-home .dashboard-empty > strong { color: #414957; font-size: 15px; }
+.employee-home .dashboard-empty > span { display: block; }
+@media (max-width: 1100px) { .employee-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.employee-dashboard-columns { grid-template-columns: minmax(0, 1.35fr) minmax(230px, .9fr); } }
+@media (max-width: 760px) { .employee-dashboard-columns { grid-template-columns: 1fr; }.employee-home-heading { align-items: flex-start; }.employee-home-actions { margin-top: 10px; } }
+@media (max-width: 560px) {
+  .employee-summary-grid { gap: 10px; }
+  .employee-summary-card { min-height: 130px; padding: 13px; }
+  .employee-home-actions { width: 100%; }
+  .employee-home-actions .button { flex: 1; }
+  .employee-data-panel > .panel-heading { align-items: flex-start; gap: 8px; padding: 15px 13px; }
+  .employee-data-panel > .panel-heading > div { flex: 1; }
+  .employee-data-panel h2 { font-size: 15px; }
+  .employee-data-panel .panel-subtitle { max-width: 220px; font-size: 10px; line-height: 1.4; }
+  .employee-data-panel > .panel-heading > a { padding-top: 2px; font-size: 10px; }
+  .employee-record-list { padding-right: 12px; padding-left: 12px; }
+  .employee-home-table th, .employee-home-table td { padding: 10px; }
+}
+
+/* ═══ Employee Dashboard — Recent Activity Strip ═══ */
+.emp-activity-panel { overflow: hidden; margin-bottom: 4px; }
+.emp-activity-panel .panel-heading { align-items: center; padding: 14px 18px; border-bottom: 1px solid #f0f2f6; gap: 10px; }
+.emp-activity-badge { padding: 2px 8px; border-radius: 20px; background: linear-gradient(135deg, #4080f8, #2458ba); color: #fff; font-size: 9px; font-weight: 700; letter-spacing: .04em; }
+.emp-activity-list { display: flex; gap: 0; flex-direction: column; }
+.emp-activity-item { position: relative; display: flex; align-items: flex-start; gap: 10px; padding: 10px 18px; border-bottom: 1px solid #f2f4f8; cursor: pointer; transition: background .12s; }
+.emp-activity-item:last-child { border-bottom: 0; }
+.emp-activity-item:hover { background: #f5f7fc; }
+.emp-activity-unread { background: #f8f9ff; }
+.emp-activity-icon { display: inline-grid; flex: 0 0 auto; place-items: center; width: 28px; height: 28px; border-radius: 7px; font-size: 13px; margin-top: 1px; }
+.emp-activity-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.emp-activity-title { color: #2a3244; font-size: 11px; font-weight: 600; line-height: 1.4; }
+.emp-activity-msg { color: #8390a0; font-size: 10px; line-height: 1.4; }
+.emp-activity-dot { position: absolute; top: 13px; right: 14px; width: 7px; height: 7px; border-radius: 50%; background: linear-gradient(135deg, #4080f8, #2458ba); box-shadow: 0 0 0 2px #e8eeff; animation: badge-pop .3s ease; }

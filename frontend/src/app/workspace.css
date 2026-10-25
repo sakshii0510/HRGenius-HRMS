@@ -1,0 +1,48 @@
+:host { display: block; }
+.workspace-content { padding-top: 24px; }
+.workspace-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 18px; }
+.workspace-toolbar .directory-search { flex: 1 1 230px; max-width: 350px; }
+.workspace-toolbar select { min-width: 165px; min-height: 42px; padding: 8px 11px; border: 1px solid #e5e7ec; border-radius: 7px; background: #fff; color: #555d6a; font-size: 13px; }
+.workspace-table { overflow: hidden; }
+.workspace-table > .panel-heading { padding: 19px 21px 16px; }
+.workspace-table .directory-table { min-width: 820px; }
+.workspace-table .row-actions { flex-wrap: wrap; }
+.workspace-table td { vertical-align: middle; }
+.record-description { display: block; max-width: 400px; margin-top: 5px; overflow: hidden; color: #9299a4; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.workspace-editor { margin-bottom: 17px; padding: 0 21px 20px; }
+.workspace-editor > .panel-heading { padding: 17px 0 15px; }
+.workspace-editor h2 { margin: 0 0 5px; color: #303540; font: 700 16px Manrope,sans-serif; }
+.workspace-form { display: grid; grid-template-columns: repeat(3, minmax(160px, 1fr)); gap: 16px; align-items: end; }
+.workspace-form label { display: grid; gap: 7px; color: #626a77; font-size: 12px; font-weight: 600; }
+.workspace-form input:not([type="checkbox"]), .workspace-form select, .workspace-form textarea { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid #e4e7ed; border-radius: 7px; outline: 0; background: #fff; color: #414957; font: 400 13px 'DM Sans',sans-serif; }
+.workspace-form input:focus, .workspace-form select:focus, .workspace-form textarea:focus { border-color: #8eb4fa; box-shadow: 0 0 0 3px #2864e814; }
+.workspace-form textarea { resize: vertical; }
+.workspace-form .field-wide { grid-column: 1 / -1; }
+.workspace-form .check-label { display: flex; align-items: center; gap: 7px; }
+.workspace-form-actions { display: flex; justify-content: flex-end; gap: 8px; grid-column: 1 / -1; }
+.workspace-feedback { margin-bottom: 15px; padding: 13px 15px; border: 1px solid #d6efdf; border-radius: 8px; background: #f1faf4; color: #347b4d; font-size: 12px; }
+.analytics-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; margin-bottom: 17px; }
+.analytics-card { display: grid; gap: 8px; min-height: 122px; padding: 17px; }
+.analytics-card > span { color: #747b87; font-size: 13px; }
+.analytics-card > strong { color: #252b37; font: 700 28px Manrope,sans-serif; }
+.analytics-card > small { color: #9198a4; font-size: 11px; }
+.analytics-history { padding: 17px 19px 20px; }
+.analytics-history .panel-heading { align-items: center; margin-bottom: 14px; }
+.analytics-history h2 { margin: 0 0 4px; font: 700 13px Manrope,sans-serif; }
+.history-bars { display: grid; grid-template-columns: repeat(8, minmax(50px, 1fr)); gap: 14px; height: 230px; align-items: end; border-bottom: 1px solid #edf0f4; }
+.history-item { display: grid; grid-template-rows: 24px 1fr 22px; justify-items: center; height: 100%; gap: 6px; color: #89909c; font-size: 11px; }
+.history-amount { max-width: 100%; overflow: hidden; font-size: 11px; white-space: nowrap; }
+.history-bar-track { display: flex; width: min(42px, 70%); height: 100%; align-items: end; overflow: hidden; border-radius: 5px 5px 0 0; background: #f2f5fa; }
+.history-bar-track i { display: block; width: 100%; min-height: 2px; border-radius: 5px 5px 0 0; background: linear-gradient(180deg,#6192f2,#2864e8); }
+.analytics-card:nth-child(3n + 2) { background: linear-gradient(135deg,#fff 72%,#f4f7ff); }
+
+@media (max-width: 850px) {
+  .analytics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workspace-form { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+}
+@media (max-width: 560px) {
+  .workspace-content { padding: 15px 12px 24px; }
+  .analytics-grid, .workspace-form { grid-template-columns: 1fr; }
+  .workspace-form .field-wide, .workspace-form-actions { grid-column: auto; }
+  .history-bars { grid-template-columns: repeat(8, minmax(30px, 1fr)); gap: 5px; }
+}

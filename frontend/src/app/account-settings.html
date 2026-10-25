@@ -1,0 +1,57 @@
+<section class="page-content module-content account-settings">
+  <div class="page-heading module-heading">
+    <div>
+      <div class="eyebrow">YOUR ACCOUNT</div>
+      <h1>Account settings</h1>
+      <p>Manage your profile and make your workspace feel more personal.</p>
+    </div>
+  </div>
+
+  @if (error()) { <div class="alert alert-error" role="alert"><span>!</span><div><strong>Setting not saved</strong><p>{{ error() }}</p></div></div> }
+  @if (saved()) { <div class="workspace-feedback" role="status">✓ Your dashboard preferences have been saved.</div> }
+
+  <div class="account-settings-grid">
+    <article class="panel account-panel">
+      <div class="panel-heading"><div><h2>Profile</h2><span class="panel-subtitle">Your HRGenius account details</span></div><span class="live-inline">SIGNED IN</span></div>
+      @if (user(); as account) {
+        <div class="account-details">
+          <div class="account-avatar">{{ account.name.slice(0, 2).toUpperCase() }}</div>
+          <div class="account-identity"><strong>{{ account.name }}</strong><span>{{ account.email }}</span></div>
+          <span class="account-role">{{ account.role }}</span>
+          <div class="account-detail-row"><span>Full name</span><strong>{{ account.name }}</strong></div>
+          <div class="account-detail-row"><span>Email address</span><strong>{{ account.email }}</strong></div>
+          <div class="account-detail-row"><span>Access role</span><strong>{{ account.role === 'ADMIN' ? 'HR Administrator' : 'Employee' }}</strong></div>
+        </div>
+        <p class="settings-note">Profile details are managed by your HR administrator. Ask them to update your name or email address.</p>
+      } @else {
+        <div class="table-message empty-message"><strong>Account unavailable</strong><span>Sign in again to view account details.</span></div>
+      }
+    </article>
+
+    <article class="panel account-panel">
+      <div class="panel-heading"><div><h2>Dashboard preferences</h2><span class="panel-subtitle">Choose which personal panels appear on your dashboard</span></div></div>
+      <div class="preference-list">
+        <label class="preference-row">
+          <span><strong>My tasks</strong><small>Show assigned tasks and onboarding items</small></span>
+          <input type="checkbox" [ngModel]="preferences().showTasks" (ngModelChange)="updatePreference('showTasks', $event)" />
+        </label>
+        <label class="preference-row">
+          <span><strong>Training</strong><small>Show courses and your training progress</small></span>
+          <input type="checkbox" [ngModel]="preferences().showTraining" (ngModelChange)="updatePreference('showTraining', $event)" />
+        </label>
+        <label class="preference-row">
+          <span><strong>Announcements</strong><small>Show published company updates</small></span>
+          <input type="checkbox" [ngModel]="preferences().showAnnouncements" (ngModelChange)="updatePreference('showAnnouncements', $event)" />
+        </label>
+      </div>
+      <p class="settings-note">Your choices only change what you see on this dashboard.</p>
+    </article>
+
+    <article class="panel account-panel account-security">
+      <div class="panel-heading"><div><h2>Security</h2><span class="panel-subtitle">Keep your account safe</span></div></div>
+      <div class="security-status"><span class="security-indicator"></span><div><strong>You’re signed in</strong><small>Your account is ready to use.</small></div></div>
+      <div class="security-notice"><strong>Password changes aren’t available here yet</strong><span>Please contact your HR administrator if you need help changing your password.</span></div>
+      <button class="button button-outline" type="button" (click)="signOut()">Sign out of this account</button>
+    </article>
+  </div>
+</section>

@@ -1,0 +1,109 @@
+<section class="page-content module-content workspace-content">
+  <div class="page-heading module-heading">
+    <div>
+      <div class="eyebrow">HRGENIUS WORKSPACE</div>
+      <h1>{{ moduleLabel() }}</h1>
+      <p>{{ pageDescription() }}</p>
+    </div>
+    @if (isAdmin() && page !== 'analytics') {
+      <button class="button button-primary" type="button" (click)="startCreate()">＋ Add {{ page === 'announcements' ? 'announcement' : page === 'documents' ? 'document' : page === 'performance' ? 'review' : page === 'training' ? 'course' : page === 'onboarding' ? 'checklist item' : 'task' }}</button>
+    }
+  </div>
+
+  @if (page === 'analytics') {
+    @if (error()) { <div class="alert alert-error" role="alert"><span>!</span><div><strong>Analytics unavailable</strong><p>{{ error() }}</p></div><button class="text-button" type="button" (click)="load()">Retry</button></div> }
+    @if (loading()) { <div class="table-message"><span class="spinner"></span>Preparing your team overview…</div> }
+    @if (summary(); as data) {
+      <div class="analytics-grid">
+        <article class="panel analytics-card"><span>Employees</span><strong>{{ data.employeeCount }}</strong><small>People on your team</small></article>
+        <article class="panel analytics-card"><span>Payroll · {{ data.payrollPeriod }}</span><strong>{{ data.currentPayrollTotal | currency }}</strong><small>Total take-home pay for this period</small></article>
+        <article class="panel analytics-card"><span>Attendance today</span><strong>{{ data.attendanceTotalToday }}</strong><small>{{ data.attendancePresentToday }} present · {{ data.attendanceLateToday }} late · {{ data.attendanceAbsentToday }} absent</small></article>
+        <article class="panel analytics-card"><span>Open tasks</span><strong>{{ data.openTaskCount }}</strong><small>Assigned tasks not completed</small></article>
+        <article class="panel analytics-card"><span>Pending leave</span><strong>{{ data.pendingLeaveCount }}</strong><small>Applications awaiting review</small></article>
+        <article class="panel analytics-card"><span>Open positions</span><strong>{{ data.openJobCount }}</strong><small>{{ data.publishedAnnouncementCount }} published announcements</small></article>
+      </div>
+      <article class="panel analytics-history">
+        <div class="panel-heading"><div><h2>Payroll history</h2><span class="panel-subtitle">Monthly payroll totals over time</span></div><button class="button button-outline button-small" type="button" (click)="load()">↻ Refresh</button></div>
+        @if (data.payrollHistory.length === 0) { <div class="table-message empty-message"><strong>No payroll history available</strong><span>Payroll totals will appear after records exist.</span></div> }
+        @else {
+          <div class="history-bars">
+            @for (month of data.payrollHistory; track month.period) {
+              <div class="history-item"><div class="history-amount">{{ month.total | currency }}</div><div class="history-bar-track"><i [style.height.%]="maxHistoryAmount(data.payrollHistory) ? month.total / maxHistoryAmount(data.payrollHistory) * 100 : 0"></i></div><span>{{ month.period }}</span></div>
+            }
+          </div>
+        }
+      </article>
+    }
+  } @else {
+    <div class="workspace-toolbar">
+      <label class="directory-search"><span>⌕</span><input [attr.aria-label]="'Search ' + moduleLabel()" [placeholder]="'Search ' + moduleLabel().toLowerCase() + '…'" [(ngModel)]="search" /></label>
+      <select aria-label="Filter record status" [(ngModel)]="statusFilter">
+        <option value="">All statuses</option>
+        @for (status of availableStatuses(); track status) { <option [value]="status">{{ status.replaceAll('_', ' ') }}</option> }
+      </select>
+      @if (isAdmin()) {
+        <select aria-label="Filter by employee" [(ngModel)]="employeeFilter">
+          <option value="">All employees</option>
+          @for (employee of employees(); track employee.id) { <option [value]="employee.id">{{ employee.firstName }} {{ employee.lastName }}</option> }
+        </select>
+      }
+      <button class="button button-outline button-small" type="button" (click)="load()">↻ Refresh</button>
+    </div>
+    @if (error()) { <div class="alert alert-error" role="alert"><span>!</span><div><strong>We couldn’t load this information</strong><p>{{ error() }}</p></div><button class="text-button" type="button" (click)="load()">Try again</button></div> }
+    @if (success()) { <div class="workspace-feedback" role="status">✓ {{ success() }}</div> }
+
+    @if (editorOpen()) {
+      <article class="panel workspace-editor">
+        <div class="panel-heading"><div><h2>{{ editingId() ? 'Edit ' + moduleLabel().toLowerCase() : 'Create ' + moduleLabel().toLowerCase() + ' record' }}</h2><span class="panel-subtitle">Fill in the details below and save your changes.</span></div><button class="close-dialog" type="button" aria-label="Close form" (click)="closeEditor()">×</button></div>
+        <form class="workspace-form" #workspaceForm="ngForm" (ngSubmit)="save()">
+          <label>Title <input name="title" [(ngModel)]="form.title" required maxlength="150" /></label>
+          <label>Status <select name="status" [(ngModel)]="form.status" required>@for (status of availableStatuses(); track status) { <option [value]="status">{{ status.replaceAll('_', ' ') }}</option> }</select></label>
+          @if (['onboarding', 'tasks', 'performance'].includes(page) || (isAdmin() && ['documents', 'training'].includes(page))) {
+            <label>Assigned employee <select name="employeeId" [(ngModel)]="form.employeeId" [required]="['onboarding', 'tasks', 'performance'].includes(page)"><option [ngValue]="0">Select employee</option>@for (employee of employees(); track employee.id) { <option [ngValue]="employee.id">{{ employee.firstName }} {{ employee.lastName }} · #{{ employee.id }}</option> }</select></label>
+          }
+          @if (page === 'onboarding' || page === 'tasks' || page === 'training') { <label>Due date <input name="dueDate" type="date" [(ngModel)]="form.dueDate" /></label> }
+          @if (page === 'performance') { <label>Score (0–100) <input name="score" type="number" [(ngModel)]="form.score" min="0" max="100" required /></label> }
+          @if (page === 'announcements' || page === 'training') {
+            <label class="check-label"><input name="visibleToEmployees" type="checkbox" [(ngModel)]="form.visibleToEmployees" /> Visible to employees</label>
+          }
+          @if (page === 'documents' && !editingId()) {
+            <label class="field-wide">File (PDF, image, TXT, CSV, DOCX or XLSX; max 10 MB) <input name="documentFile" type="file" accept=".pdf,.png,.jpg,.jpeg,.txt,.csv,.docx,.xlsx" required (change)="onFileChange($event)" /></label>
+          }
+          <label class="field-wide">Description / notes <textarea name="description" [(ngModel)]="form.description" maxlength="5000" rows="4"></textarea></label>
+          <div class="workspace-form-actions"><button class="button button-outline" type="button" [disabled]="saving()" (click)="closeEditor()">Cancel</button><button class="button button-primary" type="submit" [disabled]="workspaceForm.invalid || saving()">{{ saving() ? 'Saving…' : editingId() ? 'Save changes' : 'Save record' }}</button></div>
+        </form>
+      </article>
+    }
+
+    <article class="panel workspace-table">
+      <div class="panel-heading"><div><h2>{{ moduleLabel() }} records <span class="count-pill">{{ filteredRecords().length }}</span></h2><span class="panel-subtitle">{{ isAdmin() ? 'Manage records and team assignments' : 'Your records and assignments' }}</span></div></div>
+      @if (loading()) { <div class="table-message"><span class="spinner"></span>Loading {{ moduleLabel().toLowerCase() }}…</div> }
+      @else if (filteredRecords().length === 0) { <div class="table-message empty-message"><strong>No {{ moduleLabel().toLowerCase() }} records found</strong><span>{{ isAdmin() ? 'Create a record to start managing this workspace.' : 'Records will appear here when they are published or assigned to you.' }}</span></div> }
+      @else {
+        <div class="table-scroll"><table class="directory-table">
+          <thead><tr><th>{{ page === 'documents' ? 'DOCUMENT' : page === 'announcements' ? 'ANNOUNCEMENT' : page === 'performance' ? 'REVIEW' : page === 'training' ? 'COURSE' : 'ITEM' }}</th>@if (isAdmin() || page === 'announcements' || page === 'training') { <th>EMPLOYEE / VISIBILITY</th> }<th>STATUS</th>@if (page === 'performance') { <th>SCORE</th> }@if (page === 'onboarding' || page === 'training' || page === 'tasks') { <th>DUE DATE</th> }@if (page === 'documents') { <th>FILE</th> }<th>UPDATED</th><th>ACTIONS</th></tr></thead>
+          <tbody>@for (record of filteredRecords(); track record.id) {
+            <tr>
+              <td><strong>{{ record.title }}</strong><small class="record-description">{{ record.description || 'No additional details' }}</small>@if (record.module === 'ANNOUNCEMENTS') { <small class="table-secondary">Published {{ record.createdAt | date:'mediumDate' }}</small> }</td>
+              @if (isAdmin() || page === 'announcements' || page === 'training') { <td>{{ record.employeeName || (record.visibleToEmployees ? 'All employees' : '—') }}</td> }
+              <td><span class="status-pill" [class]="'status-pill status-' + record.status.toLowerCase()">{{ record.status.replaceAll('_', ' ') }}</span></td>
+              @if (page === 'performance') { <td>{{ record.score == null ? '—' : record.score + '%' }}</td> }
+              @if (page === 'onboarding' || page === 'training' || page === 'tasks') { <td>{{ record.dueDate ? (record.dueDate | date:'mediumDate') : '—' }}</td> }
+              @if (page === 'documents') { <td>{{ record.fileName || 'Metadata only' }}<small class="table-secondary">{{ record.fileSize ? (record.fileSize / 1024 | number:'1.0-0') + ' KB' : '' }}</small></td> }
+              <td>{{ record.updatedAt | date:'mediumDate' }}</td>
+              <td><div class="row-actions">
+                @if (page === 'documents' && record.fileName) { <button class="button button-outline button-small" type="button" (click)="download(record)">Download</button> }
+                @if (page === 'training' && canEnroll(record)) { <button class="button button-primary button-small" type="button" [disabled]="saving()" (click)="enroll(record)">Enroll</button> }
+                @else if (page === 'training' && isEnrolled(record)) { <span class="table-secondary">Enrolled</span> }
+                @if (isAdmin() && nextStatus(record); as status) { <button class="button button-outline button-small" type="button" [disabled]="saving()" (click)="updateStatus(record, status)">Mark {{ status.replaceAll('_', ' ').toLowerCase() }}</button> }
+                @else if (!isAdmin() && canUpdateStatus(record) && nextStatus(record); as status) { <button class="button button-outline button-small" type="button" [disabled]="saving()" (click)="updateStatus(record, status)">Mark {{ status.replaceAll('_', ' ').toLowerCase() }}</button> }
+                @if (isAdmin()) { <button class="action-button" type="button" title="Edit record" aria-label="Edit record" (click)="editRecord(record)">✎</button><button class="action-button delete-action" type="button" title="Delete record" aria-label="Delete record" (click)="deleteRecord(record)">⌫</button> }
+              </div></td>
+            </tr>
+          }</tbody>
+        </table></div>
+        <div class="table-footer">Showing {{ filteredRecords().length }} records</div>
+      }
+    </article>
+  }
+</section>
