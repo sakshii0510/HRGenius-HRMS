@@ -1,52 +1,79 @@
 @if (authPage(); as auth) {
   <main class="auth-screen">
-    <section class="auth-card">
-      <a class="brand auth-brand" routerLink="/login">
-        <span class="brand-mark">H</span><span>HR<span class="brand-light">Genius</span></span>
-      </a>
-      <span class="eyebrow">PEOPLE OPERATIONS, SIMPLIFIED</span>
-      <h1>{{ authTitle() }}</h1>
-      <p class="muted auth-intro">
-        @if (auth === 'forgot') {
-          Having trouble signing in? Contact your HR administrator for help with your password.
+
+    <!-- ── Left visual panel ── -->
+    <div class="auth-visual">
+      <div class="auth-visual-overlay"></div>
+      <img class="auth-visual-bg" src="assets/auth-panel.jpg" alt="" aria-hidden="true" />
+      <div class="auth-visual-content">
+        <a class="brand auth-visual-brand" routerLink="/login">
+          <span class="brand-mark">H</span><span>HR<span class="brand-light">Genius</span></span>
+        </a>
+        <div class="auth-visual-body">
+          <h2 class="auth-visual-headline">People Operations,<br><span>Simplified.</span></h2>
+          <p class="auth-visual-sub">The all-in-one HR platform for modern teams — manage attendance, leave, payroll and more from one workspace.</p>
+          <ul class="auth-feature-list">
+            <li><span class="auth-feat-icon">◷</span>Smart Attendance Tracking</li>
+            <li><span class="auth-feat-icon">▣</span>Leave & Approval Workflows</li>
+            <li><span class="auth-feat-icon">＄</span>Payroll & Finance Insights</li>
+            <li><span class="auth-feat-icon">♙</span>Recruitment Pipeline</li>
+          </ul>
+        </div>
+        <p class="auth-visual-footer">© 2025 HRGenius · Built for growing teams</p>
+      </div>
+    </div>
+
+    <!-- ── Right form panel ── -->
+    <div class="auth-form-panel">
+      <section class="auth-card">
+        <a class="brand auth-brand auth-brand-mobile" routerLink="/login">
+          <span class="brand-mark">H</span><span>HR<span class="brand-light">Genius</span></span>
+        </a>
+        <span class="eyebrow">PEOPLE OPERATIONS, SIMPLIFIED</span>
+        <h1>{{ authTitle() }}</h1>
+        <p class="muted auth-intro">
+          @if (auth === 'forgot') {
+            Having trouble signing in? Contact your HR administrator for help with your password.
+          } @else if (auth === 'signup') {
+            Join your HRGenius team and manage your work in one place.
+          } @else {
+            Welcome back. Sign in to continue to your HRGenius workspace.
+          }
+        </p>
+        <form class="auth-form" #authNgForm="ngForm" (ngSubmit)="submitAuth(authNgForm)">
+          @if (auth === 'signup') {
+            <label>Full name<input name="authName" [(ngModel)]="authForm.name" #authName="ngModel" placeholder="Your name" required maxlength="100" autocomplete="name" [disabled]="authBusy()" /></label>
+            @if (isAuthInvalid(authName)) { <span class="field-error">Enter your name (up to 100 characters).</span> }
+          }
+          <label>Email address<input name="authEmail" type="email" [(ngModel)]="authForm.email" #authEmail="ngModel" placeholder="you@company.com" required maxlength="254" autocomplete="email" [disabled]="authBusy()" /></label>
+          @if (isAuthInvalid(authEmail)) { <span class="field-error">Enter a valid email address.</span> }
+          @if (auth !== 'forgot') {
+            <label>Password<input name="authPassword" type="password" [(ngModel)]="authForm.password" #authPassword="ngModel" [placeholder]="auth === 'signup' ? 'At least 12 characters' : 'Enter your password'" required [minlength]="auth === 'signup' ? 12 : 1" maxlength="64" [autocomplete]="auth === 'signup' ? 'new-password' : 'current-password'" [disabled]="authBusy()" /></label>
+            @if (isAuthInvalid(authPassword)) { <span class="field-error">{{ auth === 'signup' ? 'Use at least 12 characters (maximum 64).' : 'Enter your password.' }}</span> }
+          }
+          @if (auth === 'forgot') {
+            <div class="forgot-disabled"><strong>Password reset is not available yet</strong><span>Please contact your HR administrator for help getting back into your account.</span></div>
+            <button class="button button-primary full-width" type="button" (click)="showPasswordResetSetupNotice()">Show account help</button>
+          } @else {
+            <button class="button button-primary full-width" type="submit" [disabled]="authNgForm.invalid || authBusy()">
+              @if (authBusy()) { <span class="spinner auth-spinner"></span> }
+              {{ authBusy() ? 'Please wait…' : auth === 'signup' ? 'Create account' : 'Sign in' }}
+            </button>
+          }
+        </form>
+        @if (authError()) { <p class="auth-error" role="alert">{{ authError() }}</p> }
+        @if (authNotice()) { <p class="auth-notice" role="status">{{ authNotice() }}</p> }
+        @if (auth !== 'forgot') { <p class="demo-callout"><span class="status-dot"></span> New accounts start with employee access. Contact your HR administrator if you need additional access.</p> }
+        @if (auth === 'login') {
+          <div class="auth-links"><button type="button" (click)="showAuth('forgot')">Forgot password?</button><span>New to HRGenius? <button type="button" (click)="showAuth('signup')">Create account</button></span></div>
         } @else if (auth === 'signup') {
-          Join your HRGenius team and manage your work in one place.
+          <div class="auth-links auth-back"><span>Already have an account? <button type="button" (click)="showAuth('login')">Sign in</button></span></div>
         } @else {
-          Welcome back. Sign in to continue to your HRGenius workspace.
+          <div class="auth-links auth-back"><button type="button" (click)="showAuth('login')">← Back to sign in</button></div>
         }
-      </p>
-      <form class="auth-form" #authNgForm="ngForm" (ngSubmit)="submitAuth(authNgForm)">
-        @if (auth === 'signup') {
-          <label>Full name<input name="authName" [(ngModel)]="authForm.name" #authName="ngModel" placeholder="Your name" required maxlength="100" autocomplete="name" [disabled]="authBusy()" /></label>
-          @if (isAuthInvalid(authName)) { <span class="field-error">Enter your name (up to 100 characters).</span> }
-        }
-        <label>Email address<input name="authEmail" type="email" [(ngModel)]="authForm.email" #authEmail="ngModel" placeholder="you@company.com" required maxlength="254" autocomplete="email" [disabled]="authBusy()" /></label>
-        @if (isAuthInvalid(authEmail)) { <span class="field-error">Enter a valid email address.</span> }
-        @if (auth !== 'forgot') {
-          <label>Password<input name="authPassword" type="password" [(ngModel)]="authForm.password" #authPassword="ngModel" [placeholder]="auth === 'signup' ? 'At least 12 characters' : 'Enter your password'" required [minlength]="auth === 'signup' ? 12 : 1" maxlength="64" [autocomplete]="auth === 'signup' ? 'new-password' : 'current-password'" [disabled]="authBusy()" /></label>
-          @if (isAuthInvalid(authPassword)) { <span class="field-error">{{ auth === 'signup' ? 'Use at least 12 characters (maximum 64).' : 'Enter your password.' }}</span> }
-        }
-        @if (auth === 'forgot') {
-          <div class="forgot-disabled"><strong>Password reset is not available yet</strong><span>Please contact your HR administrator for help getting back into your account.</span></div>
-          <button class="button button-primary full-width" type="button" (click)="showPasswordResetSetupNotice()">Show account help</button>
-        } @else {
-          <button class="button button-primary full-width" type="submit" [disabled]="authNgForm.invalid || authBusy()">
-            @if (authBusy()) { <span class="spinner auth-spinner"></span> }
-            {{ authBusy() ? 'Please wait…' : auth === 'signup' ? 'Create account' : 'Sign in' }}
-          </button>
-        }
-      </form>
-      @if (authError()) { <p class="auth-error" role="alert">{{ authError() }}</p> }
-      @if (authNotice()) { <p class="auth-notice" role="status">{{ authNotice() }}</p> }
-      @if (auth !== 'forgot') { <p class="demo-callout"><span class="status-dot"></span> New accounts start with employee access. Contact your HR administrator if you need additional access.</p> }
-      @if (auth === 'login') {
-        <div class="auth-links"><button type="button" (click)="showAuth('forgot')">Forgot password?</button><span>New to HRGenius? <button type="button" (click)="showAuth('signup')">Create account</button></span></div>
-      } @else if (auth === 'signup') {
-        <div class="auth-links auth-back"><span>Already have an account? <button type="button" (click)="showAuth('login')">Sign in</button></span></div>
-      } @else {
-        <div class="auth-links auth-back"><button type="button" (click)="showAuth('login')">← Back to sign in</button></div>
-      }
-    </section>
+      </section>
+    </div>
+
   </main>
 } @else {
   <div class="app-shell">
@@ -58,22 +85,22 @@
         <div class="nav-group">
           <span class="nav-label">OVERVIEW</span>
           <button class="nav-item" [class.active]="activePage() === 'dashboard'" (click)="navigate('dashboard')"><span class="nav-icon">▦</span>Dashboard</button>
-          <button class="nav-item" [class.active]="activePage() === 'recruitment'" (click)="navigate('recruitment')"><span class="nav-icon">♙</span>Recruitment</button>
+          <button class="nav-item" [class.active]="activePage() === 'recruitment'" (click)="navigate('recruitment')"><span class="nav-icon">♙</span>Recruitment@if (!isAdmin() && notifService.recruitmentUnread() > 0) { <span class="nav-notif-dot" aria-label="New updates"></span> }</button>
           @if (isAdmin()) {
             <button class="nav-item" [class.active]="activePage() === 'performance'" (click)="navigate('performance')"><span class="nav-icon">⌁</span>Performance</button>
             <button class="nav-item" [class.active]="activePage() === 'training'" (click)="navigate('training')"><span class="nav-icon">▤</span>Training & Development</button>
-            <button class="nav-item" [class.active]="activePage() === 'tasks'" (click)="navigate('tasks')"><span class="nav-icon">☑</span>Task Management</button>
+            <button class="nav-item" [class.active]="activePage() === 'tasks'" (click)="navigate('tasks')"><span class="nav-icon">☑</span>Task Management@if (notifService.taskUnread() > 0) { <span class="nav-notif-dot" aria-label="New updates"></span> }</button>
           } @else {
             <button class="nav-item" [class.active]="activePage() === 'training'" (click)="navigate('training')"><span class="nav-icon">▤</span>My Training</button>
-            <button class="nav-item" [class.active]="activePage() === 'tasks'" (click)="navigate('tasks')"><span class="nav-icon">☑</span>My Tasks</button>
+            <button class="nav-item" [class.active]="activePage() === 'tasks'" (click)="navigate('tasks')"><span class="nav-icon">☑</span>My Tasks@if (notifService.taskUnread() > 0) { <span class="nav-notif-dot" aria-label="New updates"></span> }</button>
           }
         </div>
         <div class="nav-group">
           <span class="nav-label">PEOPLE</span>
           @if (isAdmin()) { <button class="nav-item" [class.active]="activePage() === 'employees'" (click)="navigate('employees')"><span class="nav-icon">♧</span>Employees</button> }
           <button class="nav-item" [class.active]="activePage() === 'onboarding'" (click)="navigate('onboarding')"><span class="nav-icon">✦</span>{{ isAdmin() ? 'Onboarding' : 'My Onboarding' }}</button>
-          <button class="nav-item" [class.active]="activePage() === 'attendance'" (click)="navigate('attendance')"><span class="nav-icon">◷</span>Attendance</button>
-          <button class="nav-item" [class.active]="activePage() === 'leave'" (click)="navigate('leave')"><span class="nav-icon">▣</span>Leave Management</button>
+          <button class="nav-item" [class.active]="activePage() === 'attendance'" (click)="navigate('attendance')"><span class="nav-icon">◷</span>Attendance@if (notifService.attendanceUnread() > 0) { <span class="nav-notif-dot" aria-label="New updates"></span> }</button>
+          <button class="nav-item" [class.active]="activePage() === 'leave'" (click)="navigate('leave')"><span class="nav-icon">▣</span>Leave Management@if (notifService.leaveUnread() > 0) { <span class="nav-notif-dot" aria-label="New updates"></span> }</button>
           <button class="nav-item" [class.active]="activePage() === 'payroll'" (click)="navigate('payroll')"><span class="nav-icon">＄</span>Payroll</button>
         </div>
         <div class="nav-group">
@@ -274,14 +301,14 @@
 
               <!-- Recent Activity Panel (admin) -->
               <article class="panel activity-panel">
-                <div class="panel-heading"><div><h2>Recent Activity</h2><span class="panel-subtitle">Attendance &amp; leave updates</span></div>
+                <div class="panel-heading"><div><h2>Recent Activity</h2><span class="panel-subtitle">Leaves, attendance &amp; task updates</span></div>
                   @if (notifService.unreadCount() > 0) { <span class="activity-unread-count">{{ notifService.unreadCount() }} new</span> }
                 </div>
                 @if (notifService.notifications().length === 0) {
-                  <div class="dashboard-empty"><strong>No recent activity</strong><span>Attendance and leave changes will appear here.</span></div>
+                  <div class="dashboard-empty"><strong>No recent activity</strong><span>Leave requests, attendance, and task completions will appear here.</span></div>
                 } @else {
                   <div class="activity-list">
-                    @for (notif of notifService.notifications().slice(0, 5); track notif.id) {
+                    @for (notif of notifService.notifications().slice(0, 6); track notif.id) {
                       <div class="activity-item" [class.activity-unread]="!notif.read" (click)="notifService.markRead(notif.id)">
                         <span class="activity-icon" [class]="'notif-icon-' + notif.type">{{ notif.icon }}</span>
                         <div class="activity-body">
@@ -292,7 +319,7 @@
                       </div>
                     }
                   </div>
-                  @if (notifService.notifications().length > 5) {
+                  @if (notifService.notifications().length > 6) {
                     <button class="activity-view-all" (click)="notifService.togglePanel()">View all {{ notifService.notifications().length }} updates →</button>
                   }
                 }

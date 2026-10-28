@@ -1,11 +1,11 @@
-import { Injectable, inject, signal, computed } from '@angular/core';
+﻿import { Injectable, inject, signal, computed } from '@angular/core';
 import { HrModulesService } from './hr-modules.service';
 import { WorkspaceService } from './workspace.service';
 import { AuthService } from './auth.service';
 
 export interface AppNotification {
   id: string;
-  type: 'sick_leave' | 'task_done' | 'leave_review' | 'payroll';
+  type: 'sick_leave' | 'task_done' | 'leave_review' | 'payroll' | 'attendance' | 'leave_pending' | 'interview' | 'announcement';
   title: string;
   message: string;
   time: string;
@@ -28,13 +28,30 @@ export class NotificationService {
     this.notifications().filter((n) => !n.read).length,
   );
 
+  /** Per-section unread counts for sidebar nav badges */
+  readonly leaveUnread = computed(() =>
+    this.notifications().filter(
+      (n) => !n.read && (n.type === 'sick_leave' || n.type === 'leave_pending' || n.type === 'leave_review'),
+    ).length,
+  );
+
+  readonly taskUnread = computed(() =>
+    this.notifications().filter((n) => !n.read && n.type === 'task_done').length,
+  );
+
+  readonly attendanceUnread = computed(() =>
+    this.notifications().filter((n) => !n.read && n.type === 'attendance').length,
+  );
+
+  readonly recruitmentUnread = computed(() =>
+    this.notifications().filter((n) => !n.read && n.type === 'interview').length,
+  );
+
   private seenIds = new Set<string>(this.loadSeenIds());
 
-  /** Load role-specific notifications */
   load(): void {
     const isAdmin = this.auth.currentUser()?.role === 'ADMIN';
     this.notifications.set([]);
-
     if (isAdmin) {
       this.loadAdminNotifications();
     } else {
@@ -42,30 +59,31 @@ export class NotificationService {
     }
   }
 
-  // ── ADMIN: Sick leaves (pending) + Completed tasks ────────────────────────
   private loadAdminNotifications(): void {
-    // 1) Sick leave requests from employees (pending only)
     this.hrApi.getLeaveApplications().subscribe({
       next: (leaves) => {
-        const sickNotifs = leaves
-          .filter((l) => l.leaveType === 'SICK' && l.status === 'PENDING')
+        const leaveNotifs = leaves
+          .filter((l) => l.status === 'PENDING')
           .map((l) => {
-            const id = `sick-${l.id}`;
+            const id = `leave-pending-${l.id}`;
+            const isSick = l.leaveType === 'SICK';
             return {
               id,
-              type: 'sick_leave' as const,
-              title: `${l.employeeName} is on sick leave`,
-              message: `${l.startDate} \u2192 ${l.endDate} \u00b7 Awaiting your review`,
+              type: (isSick ? 'sick_leave' : 'leave_pending') as AppNotification['type'],
+              title: isSick
+                ? `${l.employeeName} - sick leave request`
+                : `${l.employeeName} applied for ${l.leaveType.charAt(0) + l.leaveType.slice(1).toLowerCase()} leave`,
+              message: `${l.startDate} to ${l.endDate} - Awaiting your review`,
               time: l.appliedAt,
               read: this.seenIds.has(id),
-              icon: '\ud83e\udd12',
+              icon: isSick ? '🤒' : '📋',
             };
           });
-        this.mergeNotifications(sickNotifs);
+        this.mergeNotifications(leaveNotifs);
       },
     });
 
-    // 2) Completed tasks (recent ones)
+
     this.workspaceApi.list('TASKS').subscribe({
       next: (tasks) => {
         const doneNotifs = tasks
@@ -77,10 +95,10 @@ export class NotificationService {
               id,
               type: 'task_done' as const,
               title: `Task completed`,
-              message: `${t.title}${t.employeeName ? ' \u00b7 by ' + t.employeeName : ''}`,
+              message: `${t.title}${t.employeeName ? ' · by ' + t.employeeName : ''}`,
               time: t.updatedAt,
               read: this.seenIds.has(id),
-              icon: '\u2713',
+              icon: '✓',
             };
           });
         this.mergeNotifications(doneNotifs);
@@ -88,9 +106,7 @@ export class NotificationService {
     });
   }
 
-  // ── EMPLOYEE: Approved/Rejected leaves + New payroll records ─────────────
   private loadEmployeeNotifications(): void {
-    // 1) Leave approved or rejected
     this.hrApi.getLeaveApplications().subscribe({
       next: (leaves) => {
         const leaveNotifs = leaves
@@ -101,18 +117,84 @@ export class NotificationService {
             return {
               id,
               type: 'leave_review' as const,
-              title: approved ? 'Leave approved \u2714' : 'Leave rejected',
-              message: `${l.leaveType.charAt(0) + l.leaveType.slice(1).toLowerCase()} leave \u00b7 ${l.startDate} \u2192 ${l.endDate}`,
+              title: approved ? 'Leave approved ✔' : 'Leave rejected',
+              message: `${l.leaveType.charAt(0) + l.leaveType.slice(1).toLowerCase()} leave · ${l.startDate} to ${l.endDate}`,
               time: l.reviewedAt ?? l.appliedAt,
               read: this.seenIds.has(id),
-              icon: approved ? '\u2714' : '\u2715',
+              icon: approved ? '✔' : '✕',
             };
           });
         this.mergeNotifications(leaveNotifs);
       },
     });
 
-    // 2) New payroll records (salary credited)
+    this.hrApi.getApplications().subscribe({
+      next: (applications) => {
+        const interviewNotifs = applications
+          .filter((a) => a.status === 'INTERVIEW' || a.status === 'OFFERED' || a.status === 'REJECTED')
+          .slice(0, 10)
+          .map((a) => {
+            const id = `application-${a.id}-${a.status}`;
+            const titleMap: Record<string, string> = {
+              INTERVIEW: 'Interview scheduled',
+              OFFERED: 'Job offer received 🎉',
+              REJECTED: 'Application not selected',
+            };
+            return {
+              id,
+              type: 'interview' as const,
+              title: titleMap[a.status] ?? a.status,
+              message: a.jobTitle,
+              time: a.appliedAt,
+              read: this.seenIds.has(id),
+              icon: a.status === 'OFFERED' ? '🎉' : a.status === 'INTERVIEW' ? '🗓' : '✕',
+            };
+          });
+        this.mergeNotifications(interviewNotifs);
+      },
+    });
+
+    this.workspaceApi.list('TASKS').subscribe({
+      next: (tasks) => {
+        const taskNotifs = tasks
+          .filter((t) => t.status === 'COMPLETED')
+          .slice(0, 8)
+          .map((t) => {
+            const id = `task-done-${t.id}`;
+            return {
+              id,
+              type: 'task_done' as const,
+              title: 'Task completed ✓',
+              message: t.title,
+              time: t.updatedAt,
+              read: this.seenIds.has(id),
+              icon: '✓',
+            };
+          });
+        this.mergeNotifications(taskNotifs);
+      },
+    });
+
+    this.workspaceApi.list('ANNOUNCEMENTS').subscribe({
+      next: (records) => {
+        const announcementNotifs = records
+          .slice(0, 6)
+          .map((a) => {
+            const id = `announcement-${a.id}`;
+            return {
+              id,
+              type: 'announcement' as const,
+              title: a.title,
+              message: a.description || 'New company announcement',
+              time: a.updatedAt,
+              read: this.seenIds.has(id),
+              icon: '◉',
+            };
+          });
+        this.mergeNotifications(announcementNotifs);
+      },
+    });
+
     this.hrApi.getPayroll().subscribe({
       next: (records) => {
         const payrollNotifs = records
@@ -123,11 +205,11 @@ export class NotificationService {
             return {
               id,
               type: 'payroll' as const,
-              title: 'Salary credited \ud83d\udcb0',
-              message: `${p.salaryPeriod} \u00b7 Net: $${p.netSalary.toLocaleString()}`,
+              title: 'Salary credited 💰',
+              message: `${p.salaryPeriod} · Net: $${p.netSalary.toLocaleString()}`,
               time: p.salaryPeriod + '-01',
               read: this.seenIds.has(id),
-              icon: '\ud83d\udcb0',
+              icon: '💰',
             };
           });
         this.mergeNotifications(payrollNotifs);
@@ -165,7 +247,7 @@ export class NotificationService {
         if (!existingIds.has(n.id)) merged.push(n);
       }
       merged.sort((a, b) => b.time.localeCompare(a.time));
-      return merged.slice(0, 30);
+      return merged.slice(0, 50);
     });
   }
 

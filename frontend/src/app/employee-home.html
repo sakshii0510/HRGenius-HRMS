@@ -27,20 +27,22 @@
     </div>
 
     <!-- Recent Activity strip for employees -->
-    @if (notifService.notifications().length > 0) {
-      <article class="panel emp-activity-panel">
-        <div class="panel-heading">
-          <div>
-            <h2>Recent Activity</h2>
-            <span class="panel-subtitle">Your latest HR updates</span>
-          </div>
-          @if (notifService.unreadCount() > 0) {
-            <span class="emp-activity-badge">{{ notifService.unreadCount() }} new</span>
-          }
-          <button class="text-button" (click)="notifService.togglePanel()">View all →</button>
+    <article class="panel emp-activity-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Recent Activity</h2>
+          <span class="panel-subtitle">Leave, interviews, tasks &amp; announcements</span>
         </div>
+        @if (notifService.unreadCount() > 0) {
+          <span class="emp-activity-badge">{{ notifService.unreadCount() }} new</span>
+        }
+        <button class="text-button" (click)="notifService.togglePanel()">View all →</button>
+      </div>
+      @if (notifService.notifications().length === 0) {
+        <div class="dashboard-empty"><strong>No activity yet</strong><span>Leave approvals, interview updates, tasks, and announcements will appear here.</span></div>
+      } @else {
         <div class="emp-activity-list">
-          @for (notif of notifService.notifications().slice(0, 4); track notif.id) {
+          @for (notif of notifService.notifications().slice(0, 5); track notif.id) {
             <div class="emp-activity-item" [class.emp-activity-unread]="!notif.read" (click)="notifService.markRead(notif.id)">
               <span class="emp-activity-icon" [class]="'notif-icon-' + notif.type">{{ notif.icon }}</span>
               <div class="emp-activity-body">
@@ -51,8 +53,8 @@
             </div>
           }
         </div>
-      </article>
-    }
+      }
+    </article>
 
     <div class="employee-dashboard-columns">
       <div class="employee-dashboard-main">
