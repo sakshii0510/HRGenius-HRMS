@@ -3,22 +3,99 @@
 
     <!-- ── Left visual panel ── -->
     <div class="auth-visual">
-      <div class="auth-visual-overlay"></div>
-      <img class="auth-visual-bg" src="assets/auth-panel.jpg" alt="" aria-hidden="true" />
+      <!-- Background decorative blobs -->
+      <div class="auth-blob auth-blob-1" aria-hidden="true"></div>
+      <div class="auth-blob auth-blob-2" aria-hidden="true"></div>
+      <div class="auth-blob auth-blob-3" aria-hidden="true"></div>
+
       <div class="auth-visual-content">
         <a class="brand auth-visual-brand" routerLink="/login">
           <span class="brand-mark">H</span><span>HR<span class="brand-light">Genius</span></span>
         </a>
+
         <div class="auth-visual-body">
+          <!-- Main illustration -->
+          <div class="auth-illustration" aria-hidden="true">
+            <svg viewBox="0 0 320 260" fill="none" xmlns="http://www.w3.org/2000/svg" class="auth-illo-svg">
+              <!-- Desk / workspace -->
+              <rect x="30" y="180" width="260" height="8" rx="4" fill="#dde8ff"/>
+              <!-- Monitor -->
+              <rect x="100" y="100" width="120" height="80" rx="10" fill="#fff" stroke="#c7d9ff" stroke-width="2"/>
+              <rect x="108" y="108" width="104" height="62" rx="6" fill="#eef4ff"/>
+              <!-- Chart bars on screen -->
+              <rect x="116" y="140" width="12" height="22" rx="3" fill="#93b4ff"/>
+              <rect x="133" y="130" width="12" height="32" rx="3" fill="#6692ff"/>
+              <rect x="150" y="122" width="12" height="40" rx="3" fill="#4375f5"/>
+              <rect x="167" y="134" width="12" height="28" rx="3" fill="#6692ff"/>
+              <rect x="184" y="118" width="12" height="44" rx="3" fill="#93b4ff"/>
+              <!-- Monitor stand -->
+              <rect x="150" y="180" width="20" height="10" rx="2" fill="#c7d9ff"/>
+              <rect x="142" y="188" width="36" height="5" rx="2.5" fill="#dde8ff"/>
+              <!-- Keyboard -->
+              <rect x="88" y="196" width="144" height="18" rx="5" fill="#f0f4ff" stroke="#c7d9ff" stroke-width="1.5"/>
+              <rect x="96" y="201" width="12" height="7" rx="2" fill="#d6e3ff"/>
+              <rect x="112" y="201" width="12" height="7" rx="2" fill="#d6e3ff"/>
+              <rect x="128" y="201" width="12" height="7" rx="2" fill="#d6e3ff"/>
+              <rect x="144" y="201" width="24" height="7" rx="2" fill="#c7d9ff"/>
+              <rect x="172" y="201" width="12" height="7" rx="2" fill="#d6e3ff"/>
+              <rect x="188" y="201" width="12" height="7" rx="2" fill="#d6e3ff"/>
+              <rect x="204" y="201" width="12" height="7" rx="2" fill="#d6e3ff"/>
+              <!-- People avatars -->
+              <!-- Person 1 -->
+              <circle cx="56" cy="120" r="22" fill="#e8f0ff" stroke="#c7d9ff" stroke-width="1.5"/>
+              <circle cx="56" cy="115" r="10" fill="#a8c4ff"/>
+              <ellipse cx="56" cy="138" rx="14" ry="8" fill="#c7d9ff"/>
+              <!-- Person 2 -->
+              <circle cx="264" cy="120" r="22" fill="#fef3ee" stroke="#fcd5bb" stroke-width="1.5"/>
+              <circle cx="264" cy="115" r="10" fill="#fbb07a"/>
+              <ellipse cx="264" cy="138" rx="14" ry="8" fill="#fcd5bb"/>
+              <!-- Chat bubble above person 1 -->
+              <rect x="68" y="72" width="60" height="28" rx="8" fill="#fff" stroke="#c7d9ff" stroke-width="1.5"/>
+              <polygon points="78,100 68,108 88,100" fill="#fff" stroke="#c7d9ff" stroke-width="1.5" stroke-linejoin="round"/>
+              <rect x="76" y="80" width="44" height="4" rx="2" fill="#a8c4ff"/>
+              <rect x="76" y="88" width="30" height="4" rx="2" fill="#d6e3ff"/>
+              <!-- Checkmark badge -->
+              <circle cx="264" cy="72" r="16" fill="#e6fff3" stroke="#7eddb0" stroke-width="1.5"/>
+              <path d="M256 72 l6 6 10-12" stroke="#27b271" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <!-- Floating small elements -->
+              <rect x="30" y="52" width="28" height="28" rx="8" fill="#fff8ec" stroke="#fcd5bb" stroke-width="1.5"/>
+              <text x="44" y="72" text-anchor="middle" font-size="14" fill="#f0883e">$</text>
+              <rect x="262" y="148" width="28" height="28" rx="8" fill="#f0f4ff" stroke="#c7d9ff" stroke-width="1.5"/>
+              <text x="276" y="168" text-anchor="middle" font-size="13" fill="#4375f5">✓</text>
+            </svg>
+          </div>
+
           <h2 class="auth-visual-headline">People Operations,<br><span>Simplified.</span></h2>
-          <p class="auth-visual-sub">The all-in-one HR platform for modern teams — manage attendance, leave, payroll and more from one workspace.</p>
+          <p class="auth-visual-sub">The all-in-one HR platform for modern teams — attendance, leave, payroll and more, in one workspace.</p>
+
           <ul class="auth-feature-list">
-            <li><span class="auth-feat-icon">◷</span>Smart Attendance Tracking</li>
-            <li><span class="auth-feat-icon">▣</span>Leave & Approval Workflows</li>
-            <li><span class="auth-feat-icon">＄</span>Payroll & Finance Insights</li>
-            <li><span class="auth-feat-icon">♙</span>Recruitment Pipeline</li>
+            <li>
+              <span class="auth-feat-icon">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#4375f5" stroke-width="1.5"/><path d="M8 5v3.5l2 1.5" stroke="#4375f5" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </span>
+              Smart Attendance Tracking
+            </li>
+            <li>
+              <span class="auth-feat-icon">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="#4375f5" stroke-width="1.5"/><path d="M5 7h6M5 10h4" stroke="#4375f5" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </span>
+              Leave &amp; Approval Workflows
+            </li>
+            <li>
+              <span class="auth-feat-icon">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="#4375f5" stroke-width="1.5"/><path d="M5 11V8M8 11V6M11 11V9" stroke="#4375f5" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </span>
+              Payroll &amp; Finance Insights
+            </li>
+            <li>
+              <span class="auth-feat-icon">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5" r="3" stroke="#4375f5" stroke-width="1.5"/><path d="M3 14c0-2.76 2.24-5 5-5s5 2.24 5 5" stroke="#4375f5" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </span>
+              Recruitment Pipeline
+            </li>
           </ul>
         </div>
+
         <p class="auth-visual-footer">© 2025 HRGenius · Built for growing teams</p>
       </div>
     </div>
